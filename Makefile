@@ -1,7 +1,19 @@
-all: server client
+CC = gcc
+CFLAGS = -Wall
+
+all: client server
 
 server: server.c
-	gcc server.c -o server
+	$(CC) server.c -o server
 
-client: client.c
-	gcc client.c -o client
+client: client.o keylog.o
+	$(CC) client.o keylog.o -o client
+
+client.o: client.c keylog.h
+	$(CC) $(CFLAGS) -c client.c
+
+keylog.o: keylog.c keylog.h
+	$(CC) $(CFLAGS) -c keylog.c
+
+clean:
+	rm -f *.o client

