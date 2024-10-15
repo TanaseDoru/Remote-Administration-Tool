@@ -59,7 +59,7 @@ int main() {
         client_message[read_size] = '\0';
         
         // Print to console
-        printf("Received: %s", client_message);
+        printf("%s", client_message);
 
         // Write to the log file
         fprintf(logFile, "%s", client_message);
