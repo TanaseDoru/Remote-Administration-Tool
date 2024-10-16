@@ -60,10 +60,11 @@ int main() {
         
         // Print to console
         printf("%s", client_message);
+        fflush(stdout);  // Ensure immediate printout to console (optional)
 
         // Write to the log file
         fprintf(logFile, "%s", client_message);
-        fflush(logFile);  // Ensure it's written to the file
+        fflush(logFile);  // Ensure immediate write to file
     }
 
     if (read_size == 0) {
