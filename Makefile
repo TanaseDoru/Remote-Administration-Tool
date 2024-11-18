@@ -3,11 +3,11 @@ CFLAGS = -Wall
 
 all: client server
 
-server: server.c
-	$(CC) server.c serverManager.c clientManager.c fileManager.c -o server
+server: server.c messageManager.c fileManager.c utils.c
+	$(CC) server.c serverManager.c  fileManager.c messageManager.c utils.c -o server
 
-client: client.o keylog.o
-	$(CC) client.o keylog.o -o client
+client: client.o keylog.o clientManager.c utils.c messageManager.c
+	$(CC) client.o keylog.o clientManager.c utils.c messageManager.c -o client
 
 client.o: client.c keylog.h
 	$(CC) $(CFLAGS) -c client.c
