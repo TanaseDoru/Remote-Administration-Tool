@@ -12,5 +12,5 @@ struct message
 
 typedef struct message message_t;
 
-void encapsulateMessage(message_t *msg, char* buffer[SEND_BUFFER_SIZE], char type);
-void decapsulateMessage(message_t msg, char* buffer[SEND_BUFFER_SIZE], char *type);
+void encapsulateMessage(message_t *msg, char buffer[SEND_BUFFER_SIZE], char type);
+void decapsulateMessage(message_t msg, char buffer[SEND_BUFFER_SIZE], char *type);

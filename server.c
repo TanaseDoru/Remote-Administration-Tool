@@ -10,6 +10,8 @@
 #include "utils.h"
 #include "serverManager.h"
 
+clientHandler_t clientHndler;
+
 int main() {
 
     int socket_desc, client_sock, c;
@@ -35,8 +37,9 @@ int main() {
             return 1;
         }
         printf("Connection accepted for %d\n", client_sock);
+        
+        setZeroClientHandler(&clientHndler.clientsAttr[client_sock]);
 
-        pthread_t tid;
         params.client_sock = client_sock;
         params.socket_desc = socket_desc;
         if (pthread_create(&tid, NULL, handle_client, &params) < 0) {
