@@ -38,6 +38,7 @@ int main() {
         }
         printf("Connection accepted for %d\n", client_sock);
         
+        ///Initializare cu valori default pentru clientAttr
         setZeroClientHandler(&clientHndler.clientsAttr[client_sock]);
 
         params.client_sock = client_sock;
