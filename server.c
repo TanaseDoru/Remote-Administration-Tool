@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <pthread.h>
+#include "serverInterface.h"
 
 #include "utils.h"
 #include "serverManager.h"
@@ -19,6 +20,13 @@ int main() {
 
     while(1)
     {
+        pthread_t tid;
+        if (pthread_create(&tid, NULL, serverInterface, NULL) < 0) {
+            perror("Could not create thread");
+            continue;
+        }
+        
+
         parameters_t params;
         c = sizeof(struct sockaddr_in);
         client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t *)&c);
@@ -35,6 +43,7 @@ int main() {
             perror("Could not create thread");
             continue;
         }
+
 
         pthread_detach(tid);
     }

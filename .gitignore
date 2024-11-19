@@ -3,3 +3,4 @@ server
 client.o
 keylog.o
 keylog_server.txt
+keylog*.txt
