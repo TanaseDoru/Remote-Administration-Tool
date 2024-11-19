@@ -5,8 +5,8 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <pthread.h>
-#include "serverInterface.h"
 
+#include "serverInterface.h"
 #include "utils.h"
 #include "serverManager.h"
 
@@ -16,16 +16,14 @@ int main() {
     struct sockaddr_in server, client;
 
     sock_init(&socket_desc, &server);
-    pthread_t tid;
 
+    pthread_t tid;
+    if (pthread_create(&tid, NULL, serverInterface, NULL) < 0) {
+        perror("Could not create interface thread");
+        
+    }
     while(1)
     {
-        pthread_t tid;
-        if (pthread_create(&tid, NULL, serverInterface, NULL) < 0) {
-            perror("Could not create thread");
-            continue;
-        }
-        
 
         parameters_t params;
         c = sizeof(struct sockaddr_in);
@@ -36,7 +34,7 @@ int main() {
         }
         printf("Connection accepted for %d\n", client_sock);
 
-        pthread_t tid;
+        
         params.client_sock = client_sock;
         params.socket_desc = socket_desc;
         if (pthread_create(&tid, NULL, handle_client, &params) < 0) {
