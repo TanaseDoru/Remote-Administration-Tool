@@ -5,4 +5,4 @@
 
 #define NAME_SIZE 100
 
-#define MAX_CLIENTS 10
+#define MAX_CLIENTS 123

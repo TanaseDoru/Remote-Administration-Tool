@@ -3,8 +3,8 @@ CFLAGS = -Wall
 
 all: client server
 
-server: server.c messageManager.c fileManager.c utils.c serverInterface.c
-	$(CC) server.c serverManager.c  fileManager.c messageManager.c serverInterface.c utils.c -o server
+server: server.c serverManager.o fileManager.c utils.c serverInterface.c
+	$(CC) server.c serverManager.o  fileManager.c messageManager.c serverInterface.c utils.c -o server
 
 client: client.o keylog.o clientManager.c utils.c messageManager.c
 	$(CC) client.o keylog.o clientManager.c utils.c messageManager.c -o client
@@ -14,6 +14,10 @@ client.o: client.c keylog.h
 
 keylog.o: keylog.c keylog.h
 	$(CC) $(CFLAGS) -c keylog.c
+
+serverManager.o: serverManager.c serverManager.h
+	$(CC) $(CFLAGS) -c serverManager.c
+
 
 clean:
 	rm -f *.o client

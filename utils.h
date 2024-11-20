@@ -1,4 +1,5 @@
 #pragma once
+#include "messageManager.h"
 
 struct parameters
 {
@@ -9,3 +10,5 @@ struct parameters
 
 
 typedef struct parameters parameters_t;
+
+void send_message(int sock, message_t *msg);

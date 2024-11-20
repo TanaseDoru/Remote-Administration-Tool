@@ -24,28 +24,35 @@ int main() {
         perror("Could not create interface thread");
         
     }
-    while(1)
-    {
+    while (1) {
+        parameters_t *params = malloc(sizeof(parameters_t));
+        if (params == NULL) {
+            perror("Failed to allocate memory for thread parameters");
+            continue;
+        }
 
-        parameters_t params;
         c = sizeof(struct sockaddr_in);
         client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t *)&c);
         if (client_sock < 0) {
             perror("Accept failed");
-            return 1;
-        }
-        printf("Connection accepted for %d\n", client_sock);
-        
-        ///Initializare cu valori default pentru clientAttr
-        setZeroClientHandler(&clientHndler.clientsAttr[client_sock]);
-
-        params.client_sock = client_sock;
-        params.socket_desc = socket_desc;
-        if (pthread_create(&tid, NULL, handle_client, &params) < 0) {
-            perror("Could not create thread");
+            free(params);
             continue;
         }
 
+        printf("Connection accepted for %d\n", client_sock);
+
+        // Initialize client attributes
+        setZeroClientHandler(&clientHndler.clientsAttr[client_sock]);
+
+        params->client_sock = client_sock;
+        params->socket_desc = socket_desc;
+
+        if (pthread_create(&tid, NULL, handle_client, params) < 0) {
+            perror("Could not create thread");
+            close(client_sock);
+            free(params);
+            continue;
+        }
 
         pthread_detach(tid);
     }
