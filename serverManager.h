@@ -13,6 +13,8 @@ typedef struct clientAttributes clientAttributes_t;
 
 struct clientHandler
 {
+    int numberClients;
+    int socketsClients[MAX_CLIENTS];
     clientAttributes_t clientsAttr[MAX_CLIENTS];
 };
 

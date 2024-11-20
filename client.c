@@ -34,7 +34,7 @@ int main() {
     printf("Connected\n");
 
     //Trimite Date despre Utilizator--------------------
-    int fd = open("/etc/remote_tool_config.conf", O_RDONLY);
+    int fd = open(CLIENT_CONFIG_FILE, O_RDONLY);
     if (fd < 0)
     {
         printf("Error Opening Config file.\n");

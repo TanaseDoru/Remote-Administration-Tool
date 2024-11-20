@@ -1,8 +1,14 @@
 #include "serverInterface.h"
+#include "constraints.h"
+#include "serverManager.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <termios.h>
+#include <string.h>
+
+extern clientHandler_t clientHndler;
+
 
 void initTerminal() {
     struct termios term;
@@ -22,13 +28,17 @@ void resetTerminal() {
 
 
 void printConectedDevices(int* poz){
-    int nrDeviceuri=3;
-    char nume_deviceuri[4][10]={"Device1", "Device2", "Device3"};
+    int nrDeviceuri=0;
+    char nume_deviceuri[MAX_CLIENTS][BUFFER_SIZE];
 
-    // if(*poz<0)
-    //     poz=0;
-    if(*poz>=nrDeviceuri)
-        *poz=nrDeviceuri-1;
+    for(int i = 0; i < clientHndler.numberClients; i++)
+    {
+        strcpy(nume_deviceuri[nrDeviceuri++], clientHndler.clientsAttr[clientHndler.socketsClients[i]].name);
+    }
+
+    if(*poz>=nrDeviceuri && *poz > 0)
+        *poz=nrDeviceuri - 1;
+
 
     printf("\n\n\tDevices: \n");
     for(int i = 0; i<nrDeviceuri; i++){
@@ -42,17 +52,16 @@ void printConectedDevices(int* poz){
 
 void* serverInterface()
 {
-    int poz =1;
+    int poz =0;
     while(1){
         system("clear");
-        printf("\t██████╗ █████╗ █████████╗   ████████╗██       ██╗\n");
-        printf("\t██╔══██╗██╔══██╗╚══██╔══╝   ╚══██╔══╝╚██     ██╔╝\n");
+        printf("\t██████╗  █████╗ ████████╗   ████████╗██       ██╗\n");
+        printf("\t██╔══██╗██╔══██╗ ╚═██╔══╝    ╚═██╔══╝╚██     ██╔╝\n");
         printf("\t██████╔╝███████║   ██║   ███   ██║    ╚██   ██╔╝\n");
         printf("\t██╔══██╗██╔══██║   ██║         ██║     ╚██ ██╔╝   \n");
         printf("\t██║  ██║██║  ██║   ██║         ██║      ╚██╔╝   \n");
         printf("\t╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝         ╚═╝       ╚═╝   \n");
         printConectedDevices(&poz);
-        
         char ch;
         initTerminal();  // Set terminal to non-canonical mode
 
@@ -66,11 +75,8 @@ void* serverInterface()
                     poz--;
             } else if (ch == 'B') {
                 poz++;
-            } else {
-                printf("Other key pressed -> EXITING %c\n", ch);
-                resetTerminal();
-                break;
             }
+
 
         resetTerminal();  // Reset terminal to normal mode
     }

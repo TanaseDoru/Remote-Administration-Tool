@@ -6,3 +6,5 @@
 #define NAME_SIZE 100
 
 #define MAX_CLIENTS 123
+
+#define CLIENT_CONFIG_FILE "/etc/remote_tool_config.conf"

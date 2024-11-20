@@ -14,6 +14,8 @@ clientHandler_t clientHndler;
 
 int main() {
 
+    clientHndler.numberClients=0;
+
     int socket_desc, client_sock, c;
     struct sockaddr_in server, client;
 
@@ -39,7 +41,11 @@ int main() {
             continue;
         }
 
-        printf("Connection accepted for %d\n", client_sock);
+        //printf("Connection accepted for %d\n", client_sock);
+
+        ////De aici introducem in vector un nou socket de client
+
+        clientHndler.socketsClients[clientHndler.numberClients++] = client_sock;
 
         // Initialize client attributes
         setZeroClientHandler(&clientHndler.clientsAttr[client_sock]);
