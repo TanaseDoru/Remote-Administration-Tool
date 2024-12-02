@@ -27,11 +27,24 @@ set_pc_info() {
 
   #Aici obtine informatii despre utilizator
   os_info=$(uname -a)
+
+  keyboard_device=$(grep -E "Handlers|EV=" /proc/bus/input/devices | \
+  grep -B1 "EV=120013" | \
+  grep -Eo "event[0-9]+" | \
+  head -n1)
+
+  if [[ -n $keyboard_device ]]; then
+      input_device="/dev/input/$keyboard_device"
+  else
+      echo "No keyboard input device found. Please check manually."
+      exit 1
+  fi
   
   # Salvează informatii in fisier de configurare
   config_file="/etc/remote_tool_config.conf"
   sudo bash -c "cat << EOF > $config_file
 Nume_Echipament=$pc_name
+Keyboard_Input=$input_device
 OS_Info=$os_info
 EOF"
   echo "Informațiile sistemului au fost salvate în $config_file"
