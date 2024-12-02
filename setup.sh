@@ -58,7 +58,9 @@ setup_main_application() {
   echo "Configurare fișier aplicație principală..."
   sudo bash -c "cat << 'EOF' > /usr/local/bin/remote_monitor
 #!/bin/bash
-echo 'Pornire Remote Monitor'
+echo 'Pornire Remote Admin ' > $HOME/Desktop/fisier
+sleep 20
+rm $HOME/Desktop/fisier
 # Aici adăugați comenzile specifice aplicației dvs.
 EOF"
   sudo chmod +x /usr/local/bin/remote_monitor

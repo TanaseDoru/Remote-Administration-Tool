@@ -7,10 +7,23 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
-void send_message(int sock, message_t *msg) {
+int sendMessage(int sock, message_t *msg) {
     uint32_t total_size = sizeof(msg->opCode) + sizeof(msg->size) + msg->size;
 
     if (send(sock, msg, total_size, 0) == -1) {
         perror("Failed to send message");
+        return -1;
     }
+    return 0;
+}
+
+
+int recvMessage(int sock, message_t *msg)
+{
+    int readSize;
+    if((readSize = recv(sock, msg, sizeof(*msg), 0)) > 0) {
+        msg->buffer[msg->size] = '\0';
+
+    }
+    return readSize;
 }

