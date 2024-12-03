@@ -20,3 +20,7 @@ typedef struct keyLoggerParameters keyLoggerParameters_t;
 int sendMessage(int sock, message_t *msg);
 
 int recvMessage(int sock, message_t* msg);
+
+void recvFile(int sock, const char* filename);
+
+void sendFile(int sock, const char *filename);

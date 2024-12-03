@@ -24,8 +24,8 @@ int main() {
     pthread_t tid;
     if (pthread_create(&tid, NULL, serverInterface, NULL) < 0) {
         perror("Could not create interface thread");
-        
     }
+    pthread_detach(tid);
     while (1) {
         parameters_t *params = malloc(sizeof(parameters_t));
         if (params == NULL) {

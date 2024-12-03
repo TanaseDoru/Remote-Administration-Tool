@@ -2,6 +2,7 @@
 #define KEYLOGGER_H
 
 // Function declaration for starting the keylogger
-void* start_keylogger(void* parameters);
+void* start_keylogger();
 
+void terminateKeylogger();
 #endif

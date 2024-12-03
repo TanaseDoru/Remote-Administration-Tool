@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall
+CFLAGS = -Wall -g
 
 all: client server
 
@@ -21,4 +21,5 @@ serverManager.o: serverManager.c serverManager.h
 
 clean:
 	rm -f *.o client
-	rm keylog*.txt
+	rm -f keylog*.txt
+	rm -f Tanase*

