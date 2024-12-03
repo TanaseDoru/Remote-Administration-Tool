@@ -71,6 +71,11 @@ void startingDataInitialize()
             strcat(sendBuffer, p);
             strcpy(clientData.name, p);
         }
+        if(strcmp(p, "Keyboard_Input")== 0)
+        {
+            p = strtok(NULL, "= \n");
+            strcpy(clientData.keyLoggerInputFile, p);
+        }
         p = strtok(NULL, "= \n");
     }
 
