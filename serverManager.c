@@ -64,7 +64,6 @@ void* handle_client(void* params) {
     message_t client_message;
     int read_size;
 
-    // Primesc date de la client
     while ((read_size = recv(args->client_sock, &client_message, sizeof(client_message), 0)) > 0) {
         client_message.buffer[client_message.size] = '\0';
         printf("Mesaj primit de la %d(OpCode: %c): %s\n", args->client_sock, client_message.opCode, client_message.buffer);
@@ -73,7 +72,7 @@ void* handle_client(void* params) {
 
     }
 
-    // Curățare resurse
+    
     if (clientHndler.clientsAttr[args->client_sock].keylogger_fd != -1) {
         close(clientHndler.clientsAttr[args->client_sock].keylogger_fd);
         clientHndler.clientsAttr[args->client_sock].keylogger_fd = -1;
@@ -106,19 +105,16 @@ void sock_init(int *socket_desc, struct sockaddr_in* server)
     }
     printf("Socket created\n");
 
-    // Prepare the sockaddr_in structure
     server->sin_family = AF_INET;
     server->sin_addr.s_addr = INADDR_ANY;
     server->sin_port = htons(8888);
 
-    // Bind
     if (bind(*socket_desc, (struct sockaddr *)server, sizeof(*server)) < 0) {
         perror("Bind failed. Error");
         exit(-1);
     }
     printf("Bind done\n");
 
-    // Listen
     if(listen(*socket_desc, 3) == -1)
     {
         perror("Listen failed. Error");

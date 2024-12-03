@@ -13,16 +13,16 @@ extern clientHandler_t clientHndler;
 void initTerminal() {
     struct termios new_tio;
     tcgetattr(STDIN_FILENO, &new_tio);
-    new_tio.c_lflag &= ~(ICANON | ECHO);  // Non-canonical mode, no echo
-    new_tio.c_cc[VMIN] = 0;              // Non-blocking input
-    new_tio.c_cc[VTIME] = 1;             // 0.1 second timeout
+    new_tio.c_lflag &= ~(ICANON | ECHO);  
+    new_tio.c_cc[VMIN] = 0;              
+    new_tio.c_cc[VTIME] = 1;            
     tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
 }
 
 void resetTerminal() {
     struct termios default_tio;
     tcgetattr(STDIN_FILENO, &default_tio);
-    default_tio.c_lflag |= (ICANON | ECHO);  // Restore canonical mode
+    default_tio.c_lflag |= (ICANON | ECHO); 
     tcsetattr(STDIN_FILENO, TCSANOW, &default_tio);
 }   
 
@@ -64,7 +64,7 @@ void* serverInterface()
         printConectedDevices(&poz);
         char ch = '\0';
         initTerminal();
-        ch = getchar();  // Non-blocking getchar
+        ch = getchar(); 
         resetTerminal();
             
             if (ch == 'w') {
