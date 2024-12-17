@@ -7,6 +7,7 @@
 #include <termios.h>
 #include <string.h>
 #include <sys/select.h>
+#include <sys/epoll.h>
 
 extern clientHandler_t clientHndler;
 
@@ -28,7 +29,7 @@ void resetTerminal()
     tcsetattr(STDIN_FILENO, TCSANOW, &default_tio);
 }
 
-void printConectedDevices(int *poz)
+int printConectedDevices(int *poz)
 {
     int nrDeviceuri = 0;
     char nume_deviceuri[MAX_CLIENTS][BUFFER_SIZE];
@@ -51,6 +52,22 @@ void printConectedDevices(int *poz)
         else
             printf("\t\t%s \n", nume_deviceuri[i]);
     }
+    return nrDeviceuri;
+}
+
+void *userManagement(int clientNr)
+{
+    char numeDevice[30];
+    strcpy(numeDevice, clientHndler.clientsAttr[clientHndler.socketsClients[clientNr]].name);
+    while (1)
+    {
+        system("clear");
+        printf("\tClient: %s\n", numeDevice);
+        printf("\t\texit");
+        char ch = getchar();
+        if (ch == 'q')
+            break;
+    }
 }
 
 void *serverInterface()
@@ -70,7 +87,7 @@ void *serverInterface()
         printf("\t██╔══██╗██╔══██║   ██║         ██║     ╚██ ██╔╝   \n");
         printf("\t██║  ██║██║  ██║   ██║         ██║      ╚██╔╝   \n");
         printf("\t╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝         ╚═╝       ╚═╝   \n");
-        printConectedDevices(&poz);
+        int nrDev = printConectedDevices(&poz);
 
         FD_ZERO(&read_fds);
         FD_SET(STDIN_FILENO, &read_fds);
@@ -82,9 +99,15 @@ void *serverInterface()
 
         if (ready > 0 && FD_ISSET(STDIN_FILENO, &read_fds))
         {
+            char ch1 = getchar();
+            if (ch1 == '\n' && nrDev > 0)
+            {
+                userManagement(poz);
+                continue;
+            }
+            char ch2 = getchar();
             char ch = getchar();
-            ch = getchar();
-            ch = getchar();
+
             if (ch == 'A')
             {
                 if (poz > 0)
