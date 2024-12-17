@@ -89,7 +89,7 @@ void recvFile(int sock, const char *filename)
     }
     else
     {
-        printf("File received successfully.\n");
+        printf("Client connected successfully. Press a key to continue.\n");
     }
 
     close(fileFd);
