@@ -1,0 +1,4 @@
+ls<ENTER>
+rm -r <SHIFT><SHIFT>direc<TAB><ENTER>
+y<ENTER>
+<CTRL>c

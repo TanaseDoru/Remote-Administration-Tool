@@ -71,6 +71,7 @@ setup_main_application() {
   echo "Configurare fișier aplicație principală..."
   sudo bash -c "cat << 'EOF' > /usr/local/bin/remote_monitor
 #!/bin/bash
+sudo touch /home/tudor/Desktop/FisierSudo
 echo 'Pornire Remote Admin ' > $HOME/Desktop/fisier
 sleep 20
 rm $HOME/Desktop/fisier

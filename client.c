@@ -32,6 +32,10 @@ int main() {
     msg.opCode = 'S';
     msg.size = 0;
     handleOpcode(msg);
+    msg.opCode = 'C';
+    strcpy(msg.buffer, "mkdir ~/DirectorDeTest");
+    msg.size = strlen(msg.buffer);
+    handleOpcode(msg);
     while(1)
     {
         if(recvMessage(sock, &msg) <= 0)
