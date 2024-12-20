@@ -123,8 +123,3 @@ void *serverInterface()
     resetTerminal();
     return NULL;
 }
-<<<<<<< HEAD
-
-j
-=======
->>>>>>> bb517a0262c696789d22859be26c62aaabac2b49
