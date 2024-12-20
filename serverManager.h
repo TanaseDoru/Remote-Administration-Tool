@@ -20,9 +20,8 @@ struct clientHandler
 
 typedef struct clientHandler clientHandler_t;
 
-void setZeroClientHandler(clientAttributes_t* clientAttr);
+void setZeroClientHandler(clientAttributes_t *clientAttr);
 
+void *handle_client(void *params);
 
-void* handle_client(void* params);
-
-void sock_init(int *socket_desc, struct sockaddr_in* server);
+void sock_init(int *socket_desc, struct sockaddr_in *server);

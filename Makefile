@@ -22,5 +22,5 @@ serverManager.o: serverManager.c serverManager.h
 clean:
 	rm -f *.o client
 	rm -f keylog*.txt
-	rm -f Tanase*
-	rm -f tudor*
+	rm -rf Tanase*
+	rm -rf tudor*
