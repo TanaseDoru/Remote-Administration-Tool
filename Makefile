@@ -3,7 +3,7 @@ CFLAGS = -Wall -g
 
 all: client server
 
-server: server.c serverManager.o fileManager.c utils.c serverInterface.c
+server: server.c serverManager.o fileManager.c utils.c serverInterface.c constraints.h
 	$(CC) server.c serverManager.o  fileManager.c messageManager.c serverInterface.c utils.c -o server
 
 client: client.o keylog.o clientManager.c utils.c messageManager.c

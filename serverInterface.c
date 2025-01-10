@@ -1,7 +1,7 @@
 #include "serverInterface.h"
 #include "constraints.h"
 #include "messageManager.h"
-#include  "utils.h"
+#include "utils.h"
 #include "serverManager.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -62,7 +62,7 @@ void *userManagement(int clientNr)
     char numeDevice[30];
     strcpy(numeDevice, clientHndler.clientsAttr[clientHndler.socketsClients[clientNr]].name);
     int clientSock = clientHndler.socketsClients[clientNr];
-    int exit=0;
+    int exit = 0;
     message_t scr_msg;
     char BUF[SEND_BUFFER_SIZE];
     while (1)
@@ -77,7 +77,7 @@ void *userManagement(int clientNr)
         switch (ch)
         {
         case 'q':
-            exit=1;
+            exit = 1;
             break;
         case 's':
             strcpy(BUF, "");
@@ -96,8 +96,7 @@ void *userManagement(int clientNr)
             break;
         }
 
-
-        if (exit==1)
+        if (exit == 1)
             break;
         system("clear");
     }

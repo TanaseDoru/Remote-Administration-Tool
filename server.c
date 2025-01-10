@@ -12,9 +12,10 @@
 
 clientHandler_t clientHndler;
 
-int main() {
+int main()
+{
 
-    clientHndler.numberClients=0;
+    clientHndler.numberClients = 0;
 
     int socket_desc, client_sock, c;
     struct sockaddr_in server, client;
@@ -22,26 +23,29 @@ int main() {
     sock_init(&socket_desc, &server);
 
     pthread_t tid;
-    if (pthread_create(&tid, NULL, serverInterface, NULL) < 0) {
-        perror("Could not create interface thread");
-    }
-    pthread_detach(tid);
-    while (1) {
+    // if (pthread_create(&tid, NULL, serverInterface, NULL) < 0) {
+    //     perror("Could not create interface thread");
+    // }
+    // pthread_detach(tid);
+    while (1)
+    {
         parameters_t *params = malloc(sizeof(parameters_t));
-        if (params == NULL) {
+        if (params == NULL)
+        {
             perror("Failed to allocate memory for thread parameters");
             continue;
         }
 
         c = sizeof(struct sockaddr_in);
         client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t *)&c);
-        if (client_sock < 0) {
+        if (client_sock < 0)
+        {
             perror("Accept failed");
             free(params);
             continue;
         }
 
-        //printf("Connection accepted for %d\n", client_sock);
+        // printf("Connection accepted for %d\n", client_sock);
 
         ////De aici introducem in vector un nou socket de client
 
@@ -53,7 +57,8 @@ int main() {
         params->client_sock = client_sock;
         params->socket_desc = socket_desc;
 
-        if (pthread_create(&tid, NULL, handle_client, params) < 0) {
+        if (pthread_create(&tid, NULL, handle_client, params) < 0)
+        {
             perror("Could not create thread");
             close(client_sock);
             free(params);
