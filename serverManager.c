@@ -79,7 +79,7 @@ void handleOpcode(message_t msg, int clientSock)
         strftime(timestamp, sizeof(timestamp), "%Y-%m-%d_%H:%M:%S", t);
 
         snprintf(filename, BUFFER_SIZE * 2, "%s/%s_%s.jpg", clientHndler.clientsAttr[clientSock].name, clientHndler.clientsAttr[clientSock].name, timestamp);
-        printf("Primeste in fisierul %s\n", filename);
+        // printf("Primeste in fisierul %s\n", filename);
         fflush(0);
         recvFile(clientSock, filename);
         break;
@@ -101,8 +101,8 @@ void *handle_client(void *params)
     while ((read_size = recv(args->client_sock, &client_message, sizeof(client_message), 0)) > 0)
     {
         client_message.buffer[client_message.size] = '\0';
-        printf("Mesaj primit de la %d(OpCode: %c): %s\n", args->client_sock, client_message.opCode, client_message.buffer);
-        fflush(0);
+        // printf("Mesaj primit de la %d(OpCode: %c): %s\n", args->client_sock, client_message.opCode, client_message.buffer);
+        // fflush(0);
         handleOpcode(client_message, args->client_sock);
     }
 

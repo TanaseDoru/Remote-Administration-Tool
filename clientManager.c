@@ -150,7 +150,7 @@ void handleScreenshotOpcode()
     printf("File created. sending file...\n");
     sendFile(clientData.serverSocket, filename);
 
-    // remove(filename);
+    remove(filename);
 }
 
 void expandTilde(char **args)

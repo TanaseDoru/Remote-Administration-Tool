@@ -40,10 +40,10 @@ void sendFile(int sock, const char *filename)
 
     char buffer[BUFFER_SIZE];
     ssize_t bytes_read, bytes_sent;
-    printf("In function:\n");
+    // printf("In function:\n");
     while ((bytes_read = read(file_fd, buffer, sizeof(buffer))) > 0)
     {
-        printf("Sending ||%s||:%d:\n", buffer, (int)bytes_read);
+        // printf("Sending ||%s||:%d:\n", buffer, (int)bytes_read);
         bytes_sent = send(sock, buffer, bytes_read, 0);
         if (bytes_sent < 0)
         {
@@ -58,7 +58,7 @@ void sendFile(int sock, const char *filename)
         perror("Failed to read file");
     }
     sleep(1);
-    printf("Sending Stop:\n");
+    // printf("Sending Stop:\n");
     fflush(0);
     strcpy(buffer, "STOP");
     send(sock, buffer, sizeof("STOP"), 0);
@@ -73,12 +73,12 @@ void recvFile(int sock, const char *filename)
 
     while ((bytes_received = recv(sock, buffer, sizeof(buffer), 0)) > 0)
     {
-        printf("||%s||:%lu:\n", buffer, bytes_received);
-        fflush(0);
+        // printf("||%s||:%lu:\n", buffer, bytes_received);
+        // fflush(0);
         if (buffer[bytes_received - 2] == 'P' && buffer[bytes_received - 3] == 'O')
         {
-            printf("recieved Stop: %s\n", buffer);
-            fflush(0);
+            // printf("recieved Stop: %s\n", buffer);
+            // fflush(0);
             break;
         }
         bytes_written = write(fileFd, buffer, bytes_received);
@@ -96,7 +96,7 @@ void recvFile(int sock, const char *filename)
     }
     else
     {
-        printf("Client connected successfully. Press a key to continue.\n");
+        // printf("Client connected successfully. Press a key to continue.\n");
     }
 
     close(fileFd);
