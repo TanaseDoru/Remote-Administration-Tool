@@ -88,10 +88,50 @@ void *userManagement(int clientNr)
             strcpy(BUF, "");
             encapsulateMessage(&scr_msg, BUF, 'K');
             sendMessage(clientSock, &scr_msg);
-        // case 'c':
-        //     message_t scr_msg;
-        //     encapsulateMessage(&scr_msg, "", '');
-        //     sendMessage(clientSock, scr_msg);
+            break;
+        case 'c': {
+            // Temporarily enable ECHO and ICANON for standard input behavior
+            struct termios original_tio, new_tio;
+            tcgetattr(STDIN_FILENO, &original_tio);
+            new_tio = original_tio;
+            new_tio.c_lflag |= (ECHO | ICANON);  // Enable ECHO and ICANON
+            tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
+
+            // Clear the terminal and get user input
+            system("clear");
+            printf("Enter command here:\n\t");
+
+            // Read input manually to handle backspace
+            int pos = 0;
+            char ch;
+            while (1) {
+                ch = getchar();  // Read a single character
+
+                if (ch == '\n') {  // Enter key pressed
+                    BUF[pos] = '\0';
+                    break;
+                } else if (ch == 127 || ch == '\b') {  // Backspace key
+                    if (pos > 0) {
+                        pos--;
+                        printf("\b \b");  // Move back, overwrite with space, and move back again
+                    }
+                } else if (pos < sizeof(BUF) - 1) {  // Normal character
+                    BUF[pos++] = ch;
+                    putchar(ch);  // Echo the character
+                }
+            }
+
+            // Disable ECHO and ICANON again
+            tcsetattr(STDIN_FILENO, TCSANOW, &original_tio);
+
+            // Encapsulate and send the message
+            message_t scr_msg;
+            encapsulateMessage(&scr_msg, BUF, 'C');
+            sendMessage(clientSock, &scr_msg);
+
+            break;
+        }
+
         default:
             break;
         }
