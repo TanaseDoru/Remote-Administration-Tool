@@ -23,9 +23,8 @@ set_pc_info() {
   read -p "Introduceți un nume pentru echipament (Implicit Nume Aleator): " pc_name
   pc_name=${pc_name:-"PC$((RANDOM % 1000 + 1))"}
   echo "Nume echipament: $pc_name"
-  
 
-  #Aici obtine informatii despre utilizator
+  # Obține informații despre sistem
   os_info=$(uname -a)
 
   keyboard_device=$(grep -E "Handlers|EV=" /proc/bus/input/devices | \
@@ -36,37 +35,36 @@ set_pc_info() {
   if [[ -n $keyboard_device ]]; then
       input_device="/dev/input/$keyboard_device"
   else
-      echo "No keyboard input device found. Please check manually."
+      echo "Nu a fost găsit un dispozitiv de intrare pentru tastatură. Verificați manual."
       exit 1
   fi
   
-  # Salvează informatii in fisier de configurare
-  config_file="/etc/remote_tool_config.conf"
-  sudo bash -c "cat << EOF > $config_file
+  # Salvează informațiile într-un fișier de configurare
+  config_file="/tmp/remote_tool_config.conf"
+  cat << EOF > $config_file
 Nume_Echipament=$pc_name
 Keyboard_Input=$input_device
 OS_Info=$os_info
-EOF"
-  echo "Informațiile sistemului au fost salvate în $config_file"
+EOF
+  echo "Informațiile sistemului au fost salvate temporar în $config_file."
 }
 
-# CPornire automata
-setup_autostart() {
-  echo "Configurare pornire automată..."
+setup_autostart_terminal() {
+  echo "Configurare pornire automată a unui terminal..."
   mkdir -p ~/.config/autostart
-  cat << EOF > ~/.config/autostart/remote_monitor.desktop
+  cat << EOF > ~/.config/autostart/remote_monitor_terminal.desktop
 [Desktop Entry]
 Type=Application
-Exec=/usr/local/bin/remote_monitor
+Exec=gnome-terminal -- bash -c "/usr/local/bin/ask_sudo_password.sh; bash"
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
-Name=Remote Monitor
+Name=Remote Monitor Terminal
+Comment=Solicită parola sudo la autentificare pentru Remote Monitor.
 EOF
-  echo "Programul de monitorizare va porni automat la fiecare deschidere."
+  echo "Un terminal va porni automat la autentificare pentru a solicita parola sudo."
 }
 
-# Setarea fisier executabil si pornire aplicatie
 setup_main_application() {
   echo "Configurare fișier aplicație principală..."
   sudo bash -c "cat << 'EOF' > /usr/local/bin/remote_monitor
@@ -81,11 +79,36 @@ EOF"
   echo "Fișierul principal /usr/local/bin/remote_monitor a fost configurat."
 }
 
-# Executa functiile
+setup_sudo_prompt_script() {
+  echo "Configurare script pentru cererea parolei sudo..."
+  sudo bash -c "cat << 'EOF' > /usr/local/bin/ask_sudo_password.sh
+#!/bin/bash
+
+# Verifică dacă scriptul este deja rulat cu sudo
+if [ \"\$EUID\" -ne 0 ]; then
+  echo \"Acest script necesită permisiuni de root. Introduceți parola pentru sudo:\"
+  sudo bash -c \"echo 'Permisiuni sudo acordate. Scriptul continuă...'\"
+  if [ \$? -ne 0 ]; then
+    echo \"Parola sudo incorectă sau utilizatorul a anulat cererea. Ieșire.\"
+    exit 1
+  fi
+fi
+
+# Comenzile care necesită sudo
+echo \"Rulez comenzile cu permisiuni sudo...\"
+sudo /usr/local/bin/remote_monitor
+EOF"
+  sudo chmod +x /usr/local/bin/ask_sudo_password.sh
+  echo "Scriptul /usr/local/bin/ask_sudo_password.sh a fost configurat."
+}
+
+# Execută funcțiile
 check_if_installed
 install_dependencies
 set_pc_info
 setup_main_application
-setup_autostart
+setup_sudo_prompt_script
+setup_autostart_terminal
 
 echo "Setup complet!"
+
