@@ -1,8 +1,0 @@
-<CTRL><ALT>tcd <SHIFT>de<TAB>3<TAB><SHIFT>r<TAB><ENTER>
-ls<ENTER>
-cd <SHIFT>t<TAB><ENTER>
-ls<ENTER>
-jhhfhdjjjjjj<ENTER>
-(null)<ENTER>
-q<ENTER>
-(null)(null)(null)(null)(null)(null)(null)(null)(null)(null)(null)(null)(null)(null)q<CTRL>c
