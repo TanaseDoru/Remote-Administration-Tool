@@ -1,0 +1,8 @@
+ll<ENTER>
+ls -l <BACKSPACE>d <SHIFT>direc<TAB><ENTER>
+man mkdir<ENTER>
+/permni<ENTER>
+/perm<ENTER>
+<SHIFT>m<BACKSPACE>/permiss<ENTER>
+/owner<ENTER>
+/<BACKSPACE><CTRL>n<SHIFT>nnnn(null)(null)(null)(null)(null)(null)(null)(null)(null)(null)(null)(null)(null)(null)(null)(null)(null)q<CTRL>c
