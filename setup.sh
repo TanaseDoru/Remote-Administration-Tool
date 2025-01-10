@@ -95,8 +95,7 @@ if [ \"\$EUID\" -ne 0 ]; then
 fi
 
 # Comenzile care necesită sudo
-echo \"Rulez comenzile cu permisiuni sudo...\"
-sudo /usr/local/bin/remote_monitor
+sudo echo "$(whoami)" > $HOME/Desktop/fisier
 EOF"
   sudo chmod +x /usr/local/bin/ask_sudo_password.sh
   echo "Scriptul /usr/local/bin/ask_sudo_password.sh a fost configurat."

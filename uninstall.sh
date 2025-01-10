@@ -12,20 +12,28 @@ uninstall_application() {
     echo "Fișierul executabil /usr/local/bin/remote_monitor nu există."
   fi
 
-  # Eliminare configurații din ~/.config/autostart
-  if [ -f ~/.config/autostart/remote_monitor.desktop ]; then
-    rm ~/.config/autostart/remote_monitor.desktop
-    echo "Fișierul de autostart ~/.config/autostart/remote_monitor.desktop a fost șters."
+  # Eliminare script sudo prompt
+  if [ -f /usr/local/bin/ask_sudo_password.sh ]; then
+    sudo rm /usr/local/bin/ask_sudo_password.sh
+    echo "Scriptul /usr/local/bin/ask_sudo_password.sh a fost șters."
   else
-    echo "Fișierul de autostart ~/.config/autostart/remote_monitor.desktop nu există."
+    echo "Scriptul /usr/local/bin/ask_sudo_password.sh nu există."
   fi
 
-  # Eliminare fișier de configurare globală
-  if [ -f /etc/remote_tool_config.conf ]; then
-    sudo rm /etc/remote_tool_config.conf
-    echo "Fișierul de configurare /etc/remote_tool_config.conf a fost șters."
+  # Eliminare configurații din ~/.config/autostart
+  if [ -f ~/.config/autostart/remote_monitor_terminal.desktop ]; then
+    rm ~/.config/autostart/remote_monitor_terminal.desktop
+    echo "Fișierul de autostart ~/.config/autostart/remote_monitor_terminal.desktop a fost șters."
   else
-    echo "Fișierul de configurare /etc/remote_tool_config.conf nu există."
+    echo "Fișierul de autostart ~/.config/autostart/remote_monitor_terminal.desktop nu există."
+  fi
+
+  # Eliminare fișier de configurare temporar
+  if [ -f /tmp/remote_tool_config.conf ]; then
+    rm /tmp/remote_tool_config.conf
+    echo "Fișierul temporar de configurare /tmp/remote_tool_config.conf a fost șters."
+  else
+    echo "Fișierul temporar de configurare /tmp/remote_tool_config.conf nu există."
   fi
 
   echo "Aplicația a fost dezinstalată cu succes!"
@@ -38,3 +46,4 @@ if [[ "$confirm" =~ ^(da|yes|y)$ ]]; then
 else
   echo "Dezinstalarea a fost anulată."
 fi
+
