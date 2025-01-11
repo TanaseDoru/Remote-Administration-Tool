@@ -17,6 +17,14 @@
 #include "utils.h"
 
 extern clientInfo_t clientData;
+#define MAX_SITES 20
+
+char blocked_sites[MAX_SITES][100];
+int bs_nr = 0;
+
+char previous_blocked_sites[MAX_SITES][100];
+int previous_bs_nr = 0;
+
 
 void connectionInitialize(int *sock)
 {
@@ -214,6 +222,107 @@ void handleCommandOpcode(message_t msg)
     }
 }
 
+int is_blocked_site(const char *host) {
+    for (int i = 0; i < bs_nr; i++) {
+        if (strcmp(blocked_sites[i], host) == 0) {
+            return 1; // Site is found in the blocked list
+        }
+    }
+    return 0; // Site is not found in the blocked list
+}
+
+void unblock_site(const char *host) {
+    char command[256];
+
+    // Unblock HTTP
+    snprintf(command, sizeof(command), 
+             "sudo iptables -D OUTPUT -p tcp --dport 80 -d %s -j REJECT", host);
+    system(command);
+
+    // Unblock HTTPS
+    snprintf(command, sizeof(command), 
+             "sudo iptables -D OUTPUT -p tcp --dport 443 -d %s -j REJECT", host);
+    system(command);
+
+    printf("Unblocked connection to %s\n", host);
+}
+
+void process_packet(const char *host) {
+    printf("Host accessed: %s\n", host);
+
+    if (is_blocked_site(host)) {
+        printf("Alert: Site is blocked: %s\n", host);
+        char command[256];
+
+        snprintf(command, sizeof(command), 
+                 "sudo iptables -A OUTPUT -p tcp --dport 80 -d %s -j REJECT", host);
+        system(command);
+
+        snprintf(command, sizeof(command), 
+                 "sudo iptables -A OUTPUT -p tcp --dport 443 -d %s -j REJECT", host);
+        system(command);
+
+        printf("Blocked connection to %s\n", host);
+    }
+}
+
+void handleIpOpcode(message_t msg) {
+    char *p;
+    char local_buffer[SEND_BUFFER_SIZE];
+    strncpy(local_buffer, msg.buffer, sizeof(local_buffer) - 1);
+    local_buffer[sizeof(local_buffer) - 1] = '\0'; // Null-terminate
+
+    p = strtok(local_buffer, " ");
+    char sites[MAX_SITES][100];
+    int i = 0;
+
+    while (p && i < MAX_SITES) {
+        strncpy(sites[i], p, sizeof(sites[i]) - 1);
+        sites[i][sizeof(sites[i]) - 1] = '\0';
+        i++;
+        p = strtok(NULL, " ");
+    }
+
+    if (i >= MAX_SITES) {
+        printf("Limita maxima de ip-uri blocate atinsa\n");
+        return;
+    }
+
+    // Unblock sites no longer in the current list
+    for (int j = 0; j < previous_bs_nr; j++) {
+        int found = 0;
+        for (int k = 0; k < i; k++) {
+            if (strcmp(previous_blocked_sites[j], sites[k]) == 0) {
+                found = 1;
+                break;
+            }
+        }
+        if (!found) {
+            unblock_site(previous_blocked_sites[j]);
+        }
+    }
+
+    // Copy new list to blocked_sites and update size
+    bs_nr = i;
+    for (int j = 0; j < bs_nr; j++) {
+        strncpy(blocked_sites[j], sites[j], sizeof(blocked_sites[j]) - 1);
+        blocked_sites[j][sizeof(blocked_sites[j]) - 1] = '\0';
+    }
+
+    // Update previous blocklist
+    previous_bs_nr = bs_nr;
+    for (int j = 0; j < previous_bs_nr; j++) {
+        strncpy(previous_blocked_sites[j], blocked_sites[j], sizeof(previous_blocked_sites[j]) - 1);
+        previous_blocked_sites[j][sizeof(previous_blocked_sites[j]) - 1] = '\0';
+    }
+
+    // Block sites in the current list
+    for (int j = 0; j < bs_nr; j++) {
+        process_packet(blocked_sites[j]);
+    }
+}
+
+
 void handleOpcode(message_t msg)
 {
     switch (msg.opCode)
@@ -226,6 +335,9 @@ void handleOpcode(message_t msg)
         break;
     case 'C': ///////De adaugat si in Obsidian
         handleCommandOpcode(msg);
+        break;
+    case 'B':
+        handleIpOpcode(msg);
         break;
     }
 }
