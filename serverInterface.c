@@ -145,9 +145,7 @@ void *userManagement(int clientNr)
                 }
 
                 // Restore terminal settings
-                system("clear");
-                //fflush(ch);
-                initTerminal();
+                resetTerminal(); // Make sure terminal is reset after editing
 
                 // Write updated content back to the file
                 lseek(fd, 0, SEEK_SET);
@@ -155,23 +153,28 @@ void *userManagement(int clientNr)
                 write(fd, fileBuffer, strlen(fileBuffer));
                 close(fd);
 
-                // Extract strings from the file into a buffer
+                // Now parse the file for B and U commands
                 char extractedBuffer[SEND_BUFFER_SIZE] = {0};
                 FILE *fp = fopen(filename, "r");
                 if (fp) {
-                    char line[BUFFER_SIZE];
+                    char line[BUFFER_SIZE+1];
                     while (fgets(line, sizeof(line), fp)) {
-                        line[strcspn(line, "\n")] = ' '; // Replace newline with space
-                        strncat(extractedBuffer, line, sizeof(extractedBuffer) - strlen(extractedBuffer) - 1);
+                        line[strcspn(line, "\n")] = '\0'; // Remove newline character
+                        
+                        if (line[0] == 'B') { // If the line starts with 'B'
+                            // Send the address with opcode B
+                            encapsulateMessage(&scr_msg, line + 1, 'B');
+                            sendMessage(clientSock, &scr_msg);
+                        } else if (line[0] == 'U') { // If the line starts with 'U'
+                            // Send the address with opcode U
+                            encapsulateMessage(&scr_msg, line + 1, 'U');
+                            sendMessage(clientSock, &scr_msg);
+                        }
                     }
                     fclose(fp);
+                } else {
+                    perror("Failed to open file for reading");
                 }
-
-                printf("\nExtracted Strings: %s\n", extractedBuffer);
-
-                // Encapsulate and send the extracted buffer as a message
-                encapsulateMessage(&scr_msg, extractedBuffer, 'B');
-                sendMessage(clientSock, &scr_msg);
 
                 break; // Ensure the terminal is restored and the loop exits cleanly
             }
