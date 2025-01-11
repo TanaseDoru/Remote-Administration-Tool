@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <unistd.h>
+#include <pthread.h>
 
 int sendMessage(int sock, message_t *msg)
 {
@@ -100,4 +102,59 @@ void recvFile(int sock, const char *filename)
     }
 
     close(fileFd);
+}
+
+void initTaskQueue(task_queue_t *queue)
+{
+    queue->front = 0;
+    queue->rear = -1;
+    queue->count = 0;
+    pthread_mutex_init(&queue->mutex, NULL);
+    pthread_cond_init(&queue->cond, NULL);
+}
+
+void enqueueTask(task_queue_t *queue, task_t task)
+{
+    pthread_mutex_lock(&queue->mutex);
+
+    while (queue->count == MAX_TASKS)
+    {
+        // Așteptăm până când există spațiu în coadă
+        pthread_cond_wait(&queue->cond, &queue->mutex);
+    }
+
+    queue->rear = (queue->rear + 1) % MAX_TASKS;
+    queue->tasks[queue->rear] = task;
+    queue->count++;
+
+    // Notificăm un thread că există un task disponibil
+    pthread_cond_signal(&queue->cond);
+    pthread_mutex_unlock(&queue->mutex);
+}
+
+task_t dequeueTask(task_queue_t *queue)
+{
+    pthread_mutex_lock(&queue->mutex);
+
+    while (queue->count == 0)
+    {
+        // Așteptăm până când există un task disponibil
+        pthread_cond_wait(&queue->cond, &queue->mutex);
+    }
+
+    task_t task = queue->tasks[queue->front];
+    queue->front = (queue->front + 1) % MAX_TASKS;
+    queue->count--;
+
+    // Notificăm în cazul în care un thread poate adăuga un task
+    pthread_cond_signal(&queue->cond);
+    pthread_mutex_unlock(&queue->mutex);
+
+    return task;
+}
+
+void destroyTaskQueue(task_queue_t *queue)
+{
+    pthread_mutex_destroy(&queue->mutex);
+    pthread_cond_destroy(&queue->cond);
 }

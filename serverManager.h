@@ -1,5 +1,6 @@
 #pragma once
 #include <arpa/inet.h>
+#include <pthread.h>
 #include "constraints.h"
 
 struct clientAttributes
@@ -16,6 +17,7 @@ struct clientHandler
     int numberClients;
     int socketsClients[MAX_CLIENTS];
     clientAttributes_t clientsAttr[MAX_CLIENTS];
+    pthread_mutex_t mutex;
 };
 
 typedef struct clientHandler clientHandler_t;
