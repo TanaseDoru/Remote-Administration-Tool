@@ -32,7 +32,7 @@ void connectionInitialize(int *sock)
     }
     printf("Socket created\n");
 
-    server.sin_addr.s_addr = inet_addr("127.0.0.1"); // Server IP
+    server.sin_addr.s_addr = inet_addr(IP_ADDR); // Server IP
     server.sin_family = AF_INET;
     server.sin_port = htons(8888); // Server port
 
