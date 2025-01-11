@@ -65,20 +65,6 @@ EOF
   echo "Un terminal va porni automat la autentificare pentru a solicita parola sudo."
 }
 
-setup_main_application() {
-  echo "Configurare fișier aplicație principală..."
-  sudo bash -c "cat << 'EOF' > /usr/local/bin/remote_monitor
-#!/bin/bash
-sudo touch /home/tudor/Desktop/FisierSudo
-echo 'Pornire Remote Admin ' > $HOME/Desktop/fisier
-sleep 20
-rm $HOME/Desktop/fisier
-# Aici adăugați comenzile specifice aplicației dvs.
-EOF"
-  sudo chmod +x /usr/local/bin/remote_monitor
-  echo "Fișierul principal /usr/local/bin/remote_monitor a fost configurat."
-}
-
 setup_sudo_prompt_script() {
   echo "Configurare script pentru cererea parolei sudo..."
   sudo bash -c "cat << 'EOF' > /usr/local/bin/ask_sudo_password.sh
@@ -105,7 +91,6 @@ EOF"
 check_if_installed
 install_dependencies
 set_pc_info
-setup_main_application
 setup_sudo_prompt_script
 setup_autostart_terminal
 
