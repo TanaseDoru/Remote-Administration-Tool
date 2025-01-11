@@ -11,3 +11,5 @@
 
 #define CLIENT_CONFIG_FILE "/tmp/remote_tool_config.conf"
 #define HOSTS_FILE "/etc/hosts"
+
+#define IP_ADDR "127.0.0.1"

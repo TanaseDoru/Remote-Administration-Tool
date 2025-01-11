@@ -32,7 +32,7 @@ void connectionInitialize(int *sock)
     }
     printf("Socket created\n");
 
-    server.sin_addr.s_addr = inet_addr("127.0.0.1"); // Server IP
+    server.sin_addr.s_addr = inet_addr(IP_ADDR); // Server IP
     server.sin_family = AF_INET;
     server.sin_port = htons(8888); // Server port
 
@@ -255,24 +255,7 @@ void handleCommandOpcode(message_t msg)
     }
 }
 
-void blockSite(char *site)
-{
-    FILE *hosts_file = fopen(HOSTS_FILE, "a"); // Open /etc/hosts in append mode
-    if (hosts_file == NULL)
-    {
-        perror("Error opening /etc/hosts");
-        return;
-    }
-
-    // Write the site redirection to localhost
-    fprintf(hosts_file, "127.0.0.1    %s\n", site);
-    fclose(hosts_file);
-
-    printf("Blocked site: %s\n", site);
-}
-
-// Function to unblock a site by removing its entry from the /etc/hosts file
-void unBlockSite(char *site)
+void handleIpOpcode(message_t msg)
 {
     FILE *hosts_file = fopen(HOSTS_FILE, "r"); // Open /etc/hosts in read mode
     if (hosts_file == NULL)
@@ -281,7 +264,7 @@ void unBlockSite(char *site)
         return;
     }
 
-    // Create a temporary file to store the modified hosts content
+    // Create a temporary file to store the updated hosts content
     FILE *temp_file = fopen("/tmp/hosts.tmp", "w");
     if (temp_file == NULL)
     {
@@ -291,60 +274,39 @@ void unBlockSite(char *site)
     }
 
     char line[512];
-    int found = 0;
-
-    // Read the /etc/hosts file line by line
+    // Read /etc/hosts line by line
     while (fgets(line, sizeof(line), hosts_file))
     {
-        // Check if the line contains the site
-        if (strstr(line, site) == NULL)
+        // Check if the line contains a site starting with "www."
+        if (strstr(line, "www.") == NULL)
         {
-            // Write the line to the temporary file if it doesn't match the site
+            // If not, write the line to the temporary file
             fputs(line, temp_file);
         }
-        else
-        {
-            found = 1;
-        }
     }
 
-    fclose(hosts_file);
-    fclose(temp_file);
+    fclose(hosts_file); // Close /etc/hosts file
 
-    // Replace the original /etc/hosts with the modified temporary file
-    if (found)
+    // Process the msg.buffer to extract sites and append them to the temporary file
+    char *site = strtok(msg.buffer, "\n");
+    while (site != NULL)
     {
-        if (rename("/tmp/hosts.tmp", HOSTS_FILE) == 0)
-        {
-            printf("Unblocked site: %s\n", site);
-        }
-        else
-        {
-            perror("Error replacing /etc/hosts");
-        }
+        printf("Blocking: %s\n", site);
+        // Append each site to the temporary file, redirecting to 127.0.0.1
+        fprintf(temp_file, "127.0.0.1    %s\n", site);
+        site = strtok(NULL, "\n"); // Get the next site
     }
-    else
-    {
-        printf("Site not found: %s\n", site);
-        remove("/tmp/hosts.tmp"); // Remove temporary file if no changes
-    }
-}
 
-void handleIpOpcode(message_t msg)
-{
-    char buffer[BUFFER_SIZE];
-    strcpy(buffer, msg.buffer);
-    buffer[msg.size] = '\0';
+    fclose(temp_file); // Close the temporary file
 
-    if (buffer[0] == 'b')
+    // Replace /etc/hosts with the updated temporary file
+    if (rename("/tmp/hosts.tmp", HOSTS_FILE) == 0)
     {
-        strcpy(buffer, buffer + 2);
-        blockSite(buffer);
+        printf("Updated /etc/hosts successfully.\n");
     }
     else
     {
-        strcpy(buffer, buffer + 2);
-        unBlockSite(buffer);
+        perror("Error replacing /etc/hosts");
     }
 }
 
