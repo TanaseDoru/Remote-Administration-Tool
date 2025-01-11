@@ -89,8 +89,6 @@ void *userManagement(int clientNr)
         struct timeval timeout = {0, 100000}; // Timeout de 100ms
         int ready = select(STDIN_FILENO + 1, &read_fds, NULL, NULL, &timeout);
 
-        int i = 0;
-
         if (ready > 0 && FD_ISSET(STDIN_FILENO, &read_fds))
         {
             char ch = getchar();
@@ -106,30 +104,49 @@ void *userManagement(int clientNr)
                 break;
             case 'b':
             {
-                initTerminal();
-                printf("Block/Unblock site:\nFormat:\nb <SITE> -- for blocking\nu <site> -- for unblocking\n");
+                char filename[BUFFER_SIZE];
+                snprintf(filename, sizeof(filename), "%s/%s_editor.txt", numeDevice, numeDevice); // File specific to the client
 
-                i = 0;
+                // Open or create the file
+                int fd = open(filename, O_CREAT | O_RDWR, 0664);
+                if (fd < 0)
+                {
+                    perror("Failed to open/create file");
+                    break;
+                }
+
+                // Load existing content into a buffer
+                char fileBuffer[SEND_BUFFER_SIZE] = {0};
+                read(fd, fileBuffer, sizeof(fileBuffer) - 1);
+
+                // Enable raw mode for custom key handling
+                initTerminal();
+
+                printf("\n--- Editing File: %s ---\n", filename);
+                printf("Press , to save and quit.\n\n");
+                printf("%s", fileBuffer); // Display current content
+
+                size_t cursor = strlen(fileBuffer);
                 char ch;
-                strcpy(BUF, "");
+
                 while (1)
                 {
                     ch = getchar();
 
-                    if (ch == '\n')
+                    if (ch == ',')
                     { // Exit and save
-                        BUF[i] = '\0';
                         break;
                     }
 
-                    if (ch == 127)
+                    if (ch == 127 && cursor > 0)
                     { // Backspace
-                        i--;
+                        fileBuffer[--cursor] = '\0';
                         printf("\b \b");
                     }
-                    else if (ch >= 32)
+                    else if (cursor < sizeof(fileBuffer) - 1)
                     { // Printable characters
-                        BUF[i++] = ch;
+                        fileBuffer[cursor++] = ch;
+                        fileBuffer[cursor] = '\0';
                         putchar(ch);
                     }
                 }
@@ -139,9 +156,19 @@ void *userManagement(int clientNr)
                 // fflush(ch);
                 initTerminal();
 
+                // Write updated content back to the file
+                lseek(fd, 0, SEEK_SET);
+                ftruncate(fd, 0); // Clear the file
+                write(fd, fileBuffer, strlen(fileBuffer));
+                close(fd);
+
                 // Encapsulate and send the extracted buffer as a message
-                encapsulateMessage(&scr_msg, BUF, 'B');
+                char extractBuffer[BUFFER_SIZE] = {0};
+                fd = open(filename, O_RDONLY);
+                read(fd, extractBuffer, BUFFER_SIZE);
+                encapsulateMessage(&scr_msg, extractBuffer, 'B');
                 sendMessage(clientSock, &scr_msg);
+                close(fd);
 
                 break; // Ensure the terminal is restored and the loop exits cleanly
             }
