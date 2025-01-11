@@ -10,3 +10,4 @@
 #define MAX_CLIENTS 123
 
 #define CLIENT_CONFIG_FILE "/tmp/remote_tool_config.conf"
+#define HOSTS_FILE "/etc/hosts"
