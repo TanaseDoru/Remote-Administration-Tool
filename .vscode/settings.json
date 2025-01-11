@@ -2,7 +2,8 @@
     "files.associations": {
         "unistd.h": "c",
         "utils.h": "c",
-        "serverinterface.h": "c"
+        "serverinterface.h": "c",
+        "stat.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }
