@@ -18,9 +18,12 @@ keylog.o: keylog.c keylog.h
 serverManager.o: serverManager.c serverManager.h
 	$(CC) $(CFLAGS) -c serverManager.c
 
+kill:
+	sudo kill -9 $(pidof client)
 
 clean:
 	rm -f *.o client
 	rm -f keylog*.txt
 	rm -rf Tanase*
 	rm -rf tudor*
+

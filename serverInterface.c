@@ -227,6 +227,15 @@ void *userManagement(int clientNr)
                 // Disable ECHO and ICANON again
                 tcsetattr(STDIN_FILENO, TCSANOW, &original_tio);
 
+                snprintf(filename, BUFFER_SIZE, "%s/Commands_%s.txt",
+                         clientHndler.clientsAttr[clientSock].name,
+                         clientHndler.clientsAttr[clientSock].name);
+                int fd = open(filename, O_CREAT | O_APPEND | O_WRONLY, 0664);
+                char buffer[BUFFER_SIZE * 2];
+                sprintf(buffer, "Output of command %s:\n", BUF);
+                write(fd, buffer, strlen(buffer));
+                close(fd);
+
                 // Encapsulate and send the message
                 message_t scr_msg;
                 encapsulateMessage(&scr_msg, BUF, 'C');
