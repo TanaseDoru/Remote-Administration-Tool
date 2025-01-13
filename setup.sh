@@ -24,7 +24,7 @@ set_pc_info() {
   pc_name=${pc_name:-"PC$((RANDOM % 1000 + 1))"}
   echo "Nume echipament: $pc_name"
 
-  # Obține informații despre sistem
+  
   os_info=$(uname -a)
 
   keyboard_device=$(grep -E "Handlers|EV=" /proc/bus/input/devices | \
@@ -39,7 +39,7 @@ set_pc_info() {
       exit 1
   fi
   
-  # Salvează informațiile într-un fișier de configurare
+  
   config_file="/tmp/remote_tool_config.conf"
   cat << EOF > $config_file
 Nume_Echipament=$pc_name
@@ -70,7 +70,7 @@ setup_sudo_prompt_script() {
   sudo bash -c "cat << 'EOF' > /usr/local/bin/ask_sudo_password.sh
 #!/bin/bash
 
-# Verifică dacă scriptul este deja rulat cu sudo
+
 if [ \"\$EUID\" -ne 0 ]; then
   echo \"Acest script necesită permisiuni de root. Introduceți parola pentru sudo:\"
   sudo bash -c \"echo 'Permisiuni sudo acordate. Scriptul continuă...'\"
@@ -80,14 +80,14 @@ if [ \"\$EUID\" -ne 0 ]; then
   fi
 fi
 
-# Comenzile care necesită sudo
+
 sudo echo "$(whoami)" > $HOME/Desktop/fisier
 EOF"
   sudo chmod +x /usr/local/bin/ask_sudo_password.sh
   echo "Scriptul /usr/local/bin/ask_sudo_password.sh a fost configurat."
 }
 
-# Execută funcțiile
+
 check_if_installed
 install_dependencies
 set_pc_info

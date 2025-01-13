@@ -119,7 +119,7 @@ void enqueueTask(task_queue_t *queue, task_t task)
 
     while (queue->count == MAX_TASKS)
     {
-        // Așteptăm până când există spațiu în coadă
+        
         pthread_cond_wait(&queue->cond, &queue->mutex);
     }
 
@@ -127,7 +127,7 @@ void enqueueTask(task_queue_t *queue, task_t task)
     queue->tasks[queue->rear] = task;
     queue->count++;
 
-    // Notificăm un thread că există un task disponibil
+    
     pthread_cond_signal(&queue->cond);
     pthread_mutex_unlock(&queue->mutex);
 }
@@ -138,7 +138,7 @@ task_t dequeueTask(task_queue_t *queue)
 
     while (queue->count == 0)
     {
-        // Așteptăm până când există un task disponibil
+        
         pthread_cond_wait(&queue->cond, &queue->mutex);
     }
 
@@ -146,7 +146,7 @@ task_t dequeueTask(task_queue_t *queue)
     queue->front = (queue->front + 1) % MAX_TASKS;
     queue->count--;
 
-    // Notificăm în cazul în care un thread poate adăuga un task
+   
     pthread_cond_signal(&queue->cond);
     pthread_mutex_unlock(&queue->mutex);
 

@@ -17,13 +17,13 @@ struct keyLoggerParameters
     int sock;
 };
 
-// Structura unui task
+
 typedef struct
 {
     int client_sock;
 } task_t;
 
-// Structura cozii de task-uri
+
 typedef struct
 {
     task_t tasks[MAX_TASKS];
